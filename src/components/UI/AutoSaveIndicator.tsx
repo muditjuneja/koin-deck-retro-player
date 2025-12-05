@@ -22,8 +22,7 @@ export default function AutoSaveIndicator({
     isPaused = false,
     onClick,
 }: AutoSaveIndicatorProps) {
-    const radius = 8;
-    const circumference = 2 * Math.PI * radius;
+    // Track previous state for smooth transitions
 
     // Track previous state for smooth transitions
     const prevStateRef = useRef<AutoSaveState>(state);
@@ -101,10 +100,6 @@ export default function AutoSaveIndicator({
         }
     }, [state]);
 
-    // When paused, show empty circle (no progress)
-    const effectiveProgress = isPaused ? 0 : (state === 'done' ? displayProgress : progress);
-    const strokeDashoffset = circumference - (effectiveProgress / 100) * circumference;
-
     // Calculate remaining seconds
     const remainingSeconds = Math.ceil((100 - progress) * (intervalSeconds / 100));
 
@@ -156,97 +151,64 @@ export default function AutoSaveIndicator({
 
     // Get the appropriate icon based on state
     const renderIcon = () => {
-        const iconStyle = {
-            opacity: iconOpacity,
-            transition: 'opacity 0.2s ease-in-out',
-        };
-
         if (isPaused) {
-            return (
-                <PauseCircle
-                    size={8}
-                    className={`absolute inset-0 m-auto ${colors.icon} transition-colors duration-300`}
-                    style={iconStyle}
-                />
-            );
+            return <PauseCircle size={14} className={`${colors.icon} transition-colors duration-300`} />;
         }
         if (state === 'saving') {
-            return (
-                <Loader2
-                    size={10}
-                    className={`absolute inset-0 m-auto ${colors.icon} animate-spin transition-colors duration-300`}
-                    style={iconStyle}
-                />
-            );
+            return <Loader2 size={14} className={`${colors.icon} animate-spin transition-colors duration-300`} />;
         }
         if (state === 'done') {
-            return (
-                <Check
-                    size={10}
-                    className={`absolute inset-0 m-auto ${colors.icon} transition-colors duration-300`}
-                    style={{
-                        ...iconStyle,
-                        animation: iconOpacity === 1 ? 'checkmarkPop 0.3s ease-out' : 'none',
-                    }}
-                />
-            );
+            return <Check size={14} className={`${colors.icon} transition-colors duration-300`} />;
         }
-        return (
-            <Clock
-                size={10}
-                className={`absolute inset - 0 m - auto ${colors.icon} transition - colors duration - 300`}
-                style={iconStyle}
-            />
-        );
+        return <Clock size={12} className={`${colors.icon} transition-colors duration-300`} />;
     };
 
     return (
         <button
             onClick={onClick}
-            className="relative flex flex-col items-center gap-1 p-2 rounded hover:bg-white/5 transition-colors cursor-pointer group"
+            className="relative flex flex-col items-center justify-center gap-0.5 min-w-[3rem] py-1 rounded hover:bg-white/5 transition-colors cursor-pointer group"
             title={getTooltip()}
             type="button"
         >
-            <div className="relative w-7 h-7 flex items-center justify-center">
+            <div className="relative w-8 h-8 flex items-center justify-center mb-0.5">
                 {/* Progress Ring */}
                 {!isPaused && state !== 'saving' && state !== 'done' && (
                     <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
                         <circle
-                            cx="14"
-                            cy="14"
-                            r="11"
+                            cx="16"
+                            cy="16"
+                            r="12"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="1.5"
+                            strokeWidth="2"
                             className="text-white/10"
                         />
                         <circle
-                            cx="14"
-                            cy="14"
-                            r="11"
+                            cx="16"
+                            cy="16"
+                            r="12"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="1.5"
+                            strokeWidth="2"
                             strokeLinecap="round"
-                            strokeDasharray={2 * Math.PI * 11}
-                            strokeDashoffset={2 * Math.PI * 11 * (1 - progress / 100)}
+                            strokeDasharray={2 * Math.PI * 12}
+                            strokeDashoffset={2 * Math.PI * 12 * (1 - progress / 100)}
                             className="text-emerald-400/50 transition-all duration-1000 linear"
                         />
                     </svg>
                 )}
 
-                {isPaused ? (
-                    <PauseCircle size={14} className="text-gray-500" />
-                ) : state === 'saving' ? (
-                    <Loader2 size={14} className="text-emerald-400 animate-spin" />
-                ) : state === 'done' ? (
-                    <Check size={14} className="text-emerald-400" />
-                ) : (
-                    <Clock size={12} className="text-emerald-400/70" />
-                )}
+                {/* Icon Container */}
+                <div
+                    className="flex items-center justify-center transition-opacity duration-200"
+                    style={{ opacity: iconOpacity }}
+                >
+                    {renderIcon()}
+                </div>
             </div>
-            <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400 group-hover:text-gray-300">
-                Auto
+
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${colors.label} group-hover:text-gray-300 transition-colors`}>
+                {isPaused ? 'Paused' : state === 'saving' ? 'Saving' : state === 'done' ? 'Saved' : 'Auto'}
             </span>
         </button>
     );
