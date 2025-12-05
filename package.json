@@ -20,7 +20,7 @@
         "build:element": "tsup --config tsup.element.config.ts",
         "dev": "tsup --watch",
         "lint": "eslint src",
-        "postinstall": "patch-package"
+        "postinstall": "npx patch-package"
     },
     "keywords": [
         "retro",

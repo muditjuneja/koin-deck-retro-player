@@ -1,4 +1,4 @@
-import { SaveSlot } from 'retro-game-player';
+import { SaveSlot } from 'koin-deck-retro-player';
 
 const DB_NAME = 'RetroSagaSaves';
 const STORE_NAME = 'saves';
