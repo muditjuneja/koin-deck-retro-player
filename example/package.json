@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cd .. && npx tsup && cd example && next build",
+    "build": "cd .. && npm run build && cd example && next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -22,9 +22,11 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
-    "patch-package": "^8.0.1",
     "tailwindcss": "^4",
-    "tsup": "^8.5.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "patch-package": "^8.0.1",
+    "tsup": "^8.0.0",
+    "autoprefixer": "^10.0.0",
+    "postcss": "^8.0.0"
   }
 }
