@@ -23,6 +23,7 @@ interface UseEmulatorCoreProps {
     retroAchievements?: RetroAchievementsConfig;
     initialVolume?: number;
     romFileName?: string;
+    shader?: string; // CRT shader preset name (e.g., 'crt/crt-lottes')
     onReady?: () => void;
     onError?: (error: Error) => void;
 }
@@ -61,6 +62,7 @@ export function useEmulatorCore({
     retroAchievements,
     initialVolume = 100,
     romFileName,
+    shader,
     onReady,
     onError,
 }: UseEmulatorCoreProps): UseEmulatorCoreReturn {
@@ -228,6 +230,11 @@ export function useEmulatorCore({
                     // Nostalgist supports Blob for state
                     prepareOptions.state = new Blob([initialState as any]);
                 }
+            }
+
+            // Handle shader (CRT effects)
+            if (shader) {
+                prepareOptions.shader = shader;
             }
 
             const nostalgist = await Nostalgist.prepare(prepareOptions);

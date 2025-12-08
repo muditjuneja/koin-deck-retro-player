@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-
+import { memo, useState, useEffect, useCallback } from 'react';
 import PlayerControls from './PlayerControls';
 import ToastContainer from './Overlays/ToastContainer';
+import PerformanceOverlay from './Overlays/PerformanceOverlay';
+import InputDisplay from './Overlays/InputDisplay';
+import RecordingIndicator from './Overlays/RecordingIndicator';
+import ShortcutsModal from './Modals/ShortcutsModal';
 import { VirtualController } from './VirtualController';
 import FloatingExitButton from './UI/FloatingExitButton';
 import FloatingFullscreenButton from './UI/FloatingFullscreenButton';
@@ -12,10 +15,26 @@ import GameModals from './GameModals';
 import RASidebar from './RASidebar';
 
 import { useGamePlayer } from '../hooks/useGamePlayer';
+import { usePlayerPersistence } from '../hooks/usePlayerPersistence';
 import { GamePlayerProps } from './types';
+import { KeyboardMapping } from '../lib/controls';
 
-export default function GamePlayer(props: GamePlayerProps) {
+export const GamePlayer = memo(function GamePlayer(
+    props: GamePlayerProps & {
+        controls?: KeyboardMapping; // Allow passing pre-loaded controls
+        saveControls?: (controls: KeyboardMapping) => void;
+    }
+) {
+    // -- Persistence Hook --
+    const { settings, updateSettings, isLoaded: settingsLoaded } = usePlayerPersistence();
+
+    // -- Internal State --
     const [biosModalOpen, setBiosModalOpen] = useState(false);
+    const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+
+    // -- Derived Props from Persistence (if not overridden by direct props) --
+    // Use props.shader if provided, otherwise persistent shader
+    const effectiveShader = props.shader !== undefined ? props.shader : settings.shader;
 
     const {
         // Refs
@@ -23,10 +42,13 @@ export default function GamePlayer(props: GamePlayerProps) {
         canvasRef,
 
         // State
+
         isMobile,
         isFullscreen,
         toasts,
         dismissToast,
+        raSidebarOpen,
+        setRaSidebarOpen,
 
         // Controls
         controls,
@@ -44,23 +66,6 @@ export default function GamePlayer(props: GamePlayerProps) {
         cheatsModalOpen,
         setCheatsModalOpen,
 
-        // Cheats
-        activeCheats,
-        handleToggleCheat,
-
-        // Emulator
-        nostalgist,
-        volumeState,
-
-        // Handlers
-        handleFullscreen,
-        handleSave,
-        handleLoad,
-
-        // Actions
-        pause,
-        resume,
-
         // Save Modal
         saveModalOpen,
         setSaveModalOpen,
@@ -70,38 +75,56 @@ export default function GamePlayer(props: GamePlayerProps) {
         actioningSlot,
         handleSlotSelect,
         handleSlotDelete,
-
-        // Restrictions
-        hardcoreRestrictions,
-
-        // Auto-save
         autoSaveEnabled,
         autoSavePaused,
         autoSaveState,
         autoSaveProgress,
         handleAutoSaveToggle,
 
-        // RA UI
-        raSidebarOpen,
-        setRaSidebarOpen,
+        // Restrictions
+        hardcoreRestrictions,
+
+        // Cheats
+        activeCheats,
+        handleToggleCheat,
+
+        // Emulator Instance & State
+        nostalgist, // Contains start, restart, etc.
+        volumeState: {
+            volume,
+            isMuted: muted,
+            setVolume,
+            toggleMute,
+        },
+
+        // Handlers
+        handleFullscreen,
+        handleSave, // Use handleSave instead of handleSaveState
+        handleLoad, // Use handleLoad instead of handleLoadState
+
+        // Actions (Destructured from nostalgist wrapper in useGamePlayer)
+        pause,
+        resume,
+
+        // Recording
+        isRecording,
+        isRecordingPaused,
+        recordingDuration,
+        startRecording,
+        stopRecording,
+        pauseRecording,
+        resumeRecording,
+        recordingSupported,
     } = useGamePlayer({
         ...props,
-        // Explicitly pass new handlers to ensure they are included if spread doesn't cover it (though spread should)
-        onSaveState: props.onSaveState,
-        onLoadState: props.onLoadState,
-        onAutoSave: props.onAutoSave,
         onToggleCheat: props.onToggleCheat,
         onSessionStart: props.onSessionStart,
         onSessionEnd: props.onSessionEnd,
+        shader: effectiveShader, // Pass effective shader to hook
     });
 
+    // Destructure remaining emulator actions from nostalgist instance
     const {
-        status,
-        error,
-        isPaused,
-        speed,
-        isRewinding,
-        rewindBufferSize,
         start,
         restart,
         togglePause,
@@ -109,18 +132,25 @@ export default function GamePlayer(props: GamePlayerProps) {
         startRewind,
         stopRewind,
         screenshot,
+        speed,
+        isRewinding,
+        rewindBufferSize,
+        error,
+        isPaused,
+        status,
     } = nostalgist;
 
-    const {
-        volume,
-        isMuted,
-        setVolume,
-        toggleMute,
-    } = volumeState;
+    // Sync volume from persistence on load
+    useEffect(() => {
+        if (settingsLoaded) {
+            setVolume(settings.volume);
+            if (muted !== settings.muted) toggleMute();
+        }
+    }, [settingsLoaded]); // Run once when loaded
 
     const { system, systemColor = '#00FF41', cheats = [], onExit } = props;
 
-    // -- Memoized Handlers for PlayerControls --
+    // -- Memoized Handlers --
 
     const handlePauseToggle = useCallback(() => {
         status === 'ready' ? start() : togglePause();
@@ -157,10 +187,102 @@ export default function GamePlayer(props: GamePlayerProps) {
         onExit?.();
     }, [onExit]);
 
-    // -- Memoized SelectBios Handler for GameCanvas --
     const handleBiosSelection = useCallback(() => {
         setBiosModalOpen(true);
     }, [setBiosModalOpen]);
+
+    // -- Persistence Updaters --
+
+    const handleVolumeChange = useCallback((val: number) => {
+        setVolume(val);
+        updateSettings({ volume: val });
+    }, [setVolume, updateSettings]);
+
+    const handleToggleMute = useCallback(() => {
+        toggleMute();
+        updateSettings({ muted: !muted }); // Current muted state toggled
+    }, [toggleMute, updateSettings, muted]);
+
+    const handleShaderChange = useCallback((newShader: string, requiresRestart: boolean) => {
+        updateSettings({ shader: newShader as any });
+        if (props.onShaderChange) {
+            props.onShaderChange(newShader, requiresRestart);
+        }
+    }, [updateSettings, props.onShaderChange]);
+
+    const handleTogglePerformanceOverlay = useCallback(() => {
+        updateSettings({ showPerformanceOverlay: !settings.showPerformanceOverlay });
+    }, [updateSettings, settings.showPerformanceOverlay]);
+
+    const handleToggleInputDisplay = useCallback(() => {
+        updateSettings({ showInputDisplay: !settings.showInputDisplay });
+    }, [updateSettings, settings.showInputDisplay]);
+
+    // Recording Toggle Handler (F5) - with auto-download
+    const handleToggleRecording = useCallback(async () => {
+        if (!recordingSupported) {
+            console.warn('[Recording] Not supported in this browser');
+            return;
+        }
+
+        if (isRecording) {
+            const blob = await stopRecording();
+            if (blob) {
+                // Auto-download the recording
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `gameplay-${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        } else {
+            startRecording();
+        }
+    }, [isRecording, recordingSupported, startRecording, stopRecording]);
+
+    // Shortcuts Modal Toggle (F1) - pauses game when opening, resumes when closing
+    const handleToggleShortcuts = useCallback(() => {
+        setShowShortcutsModal(prev => {
+            if (!prev) pause();
+            else resume();
+            return !prev;
+        });
+    }, [pause, resume]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                handleToggleShortcuts();
+            }
+            if (e.key === 'F3') {
+                e.preventDefault();
+                handleTogglePerformanceOverlay();
+            }
+            if (e.key === 'F4') {
+                e.preventDefault();
+                handleToggleInputDisplay();
+            }
+            if (e.key === 'F5') {
+                e.preventDefault();
+                handleToggleRecording();
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                handleToggleMute();
+            }
+            if (e.key === 'Escape' && showShortcutsModal) {
+                setShowShortcutsModal(false);
+                resume(); // Resume when closing with Escape
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleToggleShortcuts, handleTogglePerformanceOverlay, handleToggleInputDisplay, handleToggleRecording, handleToggleMute, showShortcutsModal, resume]);
 
     return (
         <div
@@ -168,7 +290,7 @@ export default function GamePlayer(props: GamePlayerProps) {
             className={`absolute inset-0 bg-black overflow-hidden select-none flex flex-col ${props.className || ''}`}
             style={props.style}
         >
-            {/* Game canvas area - takes remaining space above controls */}
+            {/* Game canvas area */}
             <div className="flex-1 relative min-h-0">
                 <GameCanvas
                     status={status}
@@ -202,9 +324,41 @@ export default function GamePlayer(props: GamePlayerProps) {
                         disabled={status === 'loading' || status === 'error'}
                     />
                 )}
+
+                {/* ===== UNIFIED TOP-RIGHT HUD ===== */}
+                <div className="absolute top-2 right-2 z-40 flex flex-col items-end gap-2 pointer-events-auto">
+                    {/* Recording Indicator */}
+                    <RecordingIndicator
+                        isRecording={isRecording}
+                        isPaused={isRecordingPaused}
+                        duration={recordingDuration}
+                        onPause={pauseRecording}
+                        onResume={resumeRecording}
+                        onStop={handleToggleRecording}
+                    />
+
+                    {/* Performance Overlay */}
+                    {settings.showPerformanceOverlay && (status === 'running' || status === 'paused') && (
+                        <PerformanceOverlay
+                            isVisible={true}
+                            coreName={props.core}
+                            systemColor={systemColor}
+                        />
+                    )}
+
+                    {/* Input Display */}
+                    {settings.showInputDisplay && (status === 'running' || status === 'paused') && (
+                        <InputDisplay
+                            isVisible={true}
+                            system={system}
+                            systemColor={systemColor}
+                            position="inline"
+                        />
+                    )}
+                </div>
             </div>
 
-            {/* Controls bar - fixed height at bottom */}
+            {/* Controls bar */}
             {!isFullscreen && (
                 <div className="shrink-0 z-50">
                     <PlayerControls
@@ -233,9 +387,9 @@ export default function GamePlayer(props: GamePlayerProps) {
                         gamepadCount={connectedCount}
                         onGamepadSettings={handleShowGamepadSettings}
                         volume={volume}
-                        isMuted={isMuted}
-                        onVolumeChange={setVolume}
-                        onToggleMute={toggleMute}
+                        isMuted={muted} // Use local 'muted' which is aliased from 'isMuted'
+                        onVolumeChange={handleVolumeChange} // Wrapped
+                        onToggleMute={handleToggleMute} // Wrapped
                         hardcoreRestrictions={hardcoreRestrictions}
                         raConnected={!!props.raUser}
                         raGameFound={!!props.raGame}
@@ -246,9 +400,24 @@ export default function GamePlayer(props: GamePlayerProps) {
                         autoSaveState={autoSaveState}
                         autoSaveProgress={autoSaveProgress}
                         onAutoSaveToggle={handleAutoSaveToggle}
+                        onShowShortcuts={handleToggleShortcuts}
+                        onRecordToggle={handleToggleRecording}
+                        isRecording={isRecording}
+                        currentShader={effectiveShader as import('./UI/ShaderSelector').ShaderPresetId}
+                        onShaderChange={handleShaderChange} // Wrapped
                     />
                 </div>
             )}
+
+            {/* Modals */}
+            <ShortcutsModal
+                isOpen={showShortcutsModal}
+                onClose={() => {
+                    setShowShortcutsModal(false);
+                    resume();
+                }}
+                systemColor={systemColor}
+            />
 
             <GameModals
                 controlsModalOpen={controlsModalOpen}
@@ -288,7 +457,7 @@ export default function GamePlayer(props: GamePlayerProps) {
                 onSelectBios={props.onSelectBios}
             />
 
-            {/* RetroAchievements Sidebar */}
+            {/* RASidebar */}
             {!isMobile && (
                 <RASidebar
                     isOpen={raSidebarOpen}
@@ -307,18 +476,9 @@ export default function GamePlayer(props: GamePlayerProps) {
                 />
             )}
 
-            {/* Achievement Popup - only show latest unlocked if not already shown */}
-            {/* Note: In a real app, you might want a queue system. For now, we assume the parent handles the queue or we just show the latest. */}
-            {/* The existing app had logic for 'recentUnlock'. We don't have that state here yet. 
-                For now, we'll rely on the parent to trigger a toast or popup via other means, 
-                OR we can add 'recentUnlock' prop. 
-                Let's assume the parent handles popups via toasts for now to keep it simple, 
-                OR we can add a 'recentUnlock' prop. The user said 'provide the UI'. 
-                Let's add 'recentUnlock' prop to GamePlayerProps if we want to use AchievementPopup.
-            */}
-
-
             <ToastContainer toasts={toasts} onDismiss={dismissToast} />
         </div>
     );
-}
+});
+
+export default GamePlayer;

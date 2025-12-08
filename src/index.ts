@@ -9,3 +9,6 @@ export * from './lib/systems';
 export { default as RASidebar } from './components/RASidebar';
 export { default as AchievementPopup } from './components/Overlays/AchievementPopup';
 export { default as ToastContainer } from './components/Overlays/ToastContainer';
+export { default as ShaderSelector, SHADER_PRESETS, type ShaderPresetId } from './components/UI/ShaderSelector';
+export { default as ShortcutsReference } from './components/UI/ShortcutsReference';
+export * from './hooks/useGameRecording';

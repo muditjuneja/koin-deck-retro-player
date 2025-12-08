@@ -1,8 +1,10 @@
 import { memo } from 'react';
-import { Maximize, Gamepad2, Joystick, Code, Power } from 'lucide-react';
+import { Maximize, Gamepad2, Joystick, Code, Power, HelpCircle } from 'lucide-react';
 import { ControlButton } from './ControlButton';
+import ShaderDropdown from './ShaderDropdown';
 import RAButton from '../RASidebar/RAButton';
 import HardcoreTooltip from '../UI/HardcoreTooltip';
+import { ShaderPresetId } from '../UI/ShaderSelector';
 
 interface SettingsControlsProps {
     onFullscreen: () => void;
@@ -10,7 +12,12 @@ interface SettingsControlsProps {
     onGamepadSettings?: () => void;
     onCheats: () => void;
     onRetroAchievements: () => void;
+    onShowShortcuts?: () => void;
     onExit: () => void;
+    // Shader controls
+    currentShader?: ShaderPresetId;
+    onShaderChange?: (shader: ShaderPresetId, requiresRestart: boolean) => void;
+    isRunning?: boolean; // Passed to ShaderDropdown for restart warning
     disabled?: boolean;
     systemColor?: string;
     gamepadCount?: number;
@@ -29,7 +36,11 @@ export const SettingsControls = memo(function SettingsControls({
     onGamepadSettings,
     onCheats,
     onRetroAchievements,
+    onShowShortcuts,
     onExit,
+    currentShader,
+    onShaderChange,
+    isRunning = false,
     disabled = false,
     systemColor = '#00FF41',
     gamepadCount = 0,
@@ -46,6 +57,20 @@ export const SettingsControls = memo(function SettingsControls({
 
     return (
         <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Shader Selector */}
+            <ShaderDropdown
+                currentShader={currentShader}
+                onShaderChange={onShaderChange}
+                isRunning={isRunning}
+                systemColor={systemColor}
+                disabled={disabled}
+            />
+
+            {/* Help / Shortcuts button */}
+            {onShowShortcuts && (
+                <ControlButton onClick={onShowShortcuts} icon={HelpCircle} label="Help" disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
+            )}
+
             {/* Fullscreen button - hidden on mobile (we have floating button) */}
             <ControlButton onClick={onFullscreen} icon={Maximize} label="Full" disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
             {/* Hide some buttons on mobile to save space */}

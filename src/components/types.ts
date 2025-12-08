@@ -1,4 +1,5 @@
 import { SpeedMultiplier } from '../hooks/useNostalgist';
+import { ShaderPresetId } from './UI/ShaderSelector';
 // Re-export from unified controls module for backwards compatibility
 import { KeyboardMapping, DEFAULT_KEYBOARD } from '../lib/controls';
 import { RACredentials, RAGameExtended, RAAchievement } from '../lib/retroachievements';
@@ -40,6 +41,8 @@ export interface GamePlayerProps {
     onError?: (error: Error) => void;
     onExit?: () => void;
     systemColor?: string; // Console-specific color for theming
+    shader?: string; // CRT shader preset (e.g., 'crt/crt-lottes')
+    onShaderChange?: (shader: string, requiresRestart: boolean) => void; // Called when user changes shader mid-game
     initialSlot?: number; // Auto-load save from this slot on start
 
     // Save/Load Handlers
@@ -125,6 +128,13 @@ export interface PlayerControlsProps {
     isMuted?: boolean;
     onVolumeChange?: (volume: number) => void;
     onToggleMute?: () => void;
+    onShowShortcuts?: () => void; // Toggle shortcuts panel
+    // Recording
+    onRecordToggle?: () => void;
+    isRecording?: boolean;
+    // Shader controls
+    currentShader?: ShaderPresetId;
+    onShaderChange?: (shader: ShaderPresetId, requiresRestart: boolean) => void;
 }
 
 export interface SaveSlotModalProps {

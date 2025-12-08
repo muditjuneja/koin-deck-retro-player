@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { GamePlayer, Cheat, RACredentials } from 'koin-deck-retro-player';
-import { Settings, Gamepad2, Upload, Play, Disc, User, X, ChevronDown, Github, FileCode, Cpu } from 'lucide-react';
+import { GamePlayer, Cheat, RACredentials, SHADER_PRESETS, ShaderPresetId } from 'koin-deck-retro-player';
+import { Settings, Gamepad2, Upload, Play, Disc, User, X, ChevronDown, Github, FileCode, Cpu, Palette } from 'lucide-react';
 
 // Import player version from parent package.json
 import packageJson from '../../../package.json';
@@ -78,6 +78,7 @@ export default function GameDashboard() {
     const [romFile, setRomFile] = useState<File | null>(null);
     const [romUrl, setRomUrl] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [selectedShader, setSelectedShader] = useState<ShaderPresetId>('');
 
     // Local BIOS Library
     const [biosLibrary, setBiosLibrary] = useState<{ id: string; name: string; url: string; file: File }[]>([]);
@@ -209,6 +210,15 @@ export default function GameDashboard() {
                             onRALogout={() => setRaUser(null)}
                             cheats={MOCK_CHEATS[selectedSystem.id] || []}
                             autoSaveInterval={30000}
+                            shader={selectedShader || undefined}
+                            onShaderChange={(shader, requiresRestart) => {
+                                setSelectedShader(shader as ShaderPresetId);
+                                if (requiresRestart) {
+                                    // Restart with new shader by exiting and replaying
+                                    setIsPlaying(false);
+                                    setTimeout(() => setIsPlaying(true), 100);
+                                }
+                            }}
                         />
                     );
                 })()}
@@ -337,6 +347,44 @@ export default function GameDashboard() {
                                             </div>
                                         </div>
                                         <div className="absolute inset-0 border-2 border-black pointer-events-none translate-x-[4px] translate-y-[4px] -z-10 bg-[#E0E0E0]"></div>
+                                    </div>
+                                </section>
+
+                                {/* Shader Selector */}
+                                <section>
+                                    <label className="block font-black text-xs uppercase mb-1.5 flex items-center gap-2">
+                                        <Palette size={14} /> Video Shader
+                                    </label>
+                                    <div className="relative group">
+                                        <select
+                                            value={selectedShader}
+                                            onChange={(e) => setSelectedShader(e.target.value as ShaderPresetId)}
+                                            className="w-full appearance-none border-2 border-black p-3 pr-10 font-bold text-sm bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFD600]"
+                                        >
+                                            {SHADER_PRESETS.map((preset) => (
+                                                <option key={preset.id} value={preset.id}>
+                                                    {preset.name} - {preset.description}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <ChevronDown size={16} />
+                                        </div>
+                                        <div className="absolute inset-0 border-2 border-black pointer-events-none translate-x-[4px] translate-y-[4px] -z-10 bg-black group-hover:translate-x-[5px] group-hover:translate-y-[5px] transition-transform"></div>
+                                    </div>
+                                </section>
+
+                                {/* Player Shortcuts (F-keys) */}
+                                <section className="bg-gray-100 border-2 border-black p-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Gamepad2 size={14} />
+                                        <span className="font-black text-xs uppercase">Shortcuts</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-1 text-xs">
+                                        <span><kbd className="bg-white px-1 border border-black font-mono">F1</kbd> Help</span>
+                                        <span><kbd className="bg-white px-1 border border-black font-mono">F3</kbd> FPS</span>
+                                        <span><kbd className="bg-white px-1 border border-black font-mono">F5</kbd> Record</span>
+                                        <span><kbd className="bg-white px-1 border border-black font-mono">F9</kbd> Mute</span>
                                     </div>
                                 </section>
 

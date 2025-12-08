@@ -9,7 +9,7 @@
 
 The high-performance, preservation-focused emulation engine powering [Koin Deck](https://koin.theretrosaga.com/). Built for those who remember blowing into cartridges, but demand the convenience of the cloud.
 
-![Koin Deck Retro Player](https://raw.githubusercontent.com/beingmudit/retro-game-player/main/screenshot.png)
+![Koin Deck Retro Player](./koin-player.png)
 
 ## Core Philosophy
 

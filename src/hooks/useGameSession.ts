@@ -82,6 +82,7 @@ export function useGameSession(props: UseGameSessionProps) {
         keyboardControls: controls,
         gamepadBindings: gamepadBindings.length > 0 ? gamepadBindings : undefined,
         retroAchievements: retroAchievementsConfig,
+        shader: props.shader,
         onReady: () => {
             console.log('[GamePlayer] Emulator started');
             onSessionStart?.();

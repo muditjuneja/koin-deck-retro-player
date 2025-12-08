@@ -24,6 +24,7 @@ const PlayerControls = memo(function PlayerControls({
     onControls,
     onCheats,
     onRetroAchievements,
+    onShowShortcuts,
     onExit,
     disabled = false,
     loadDisabled = false,
@@ -45,6 +46,10 @@ const PlayerControls = memo(function PlayerControls({
     isMuted = false,
     onVolumeChange,
     onToggleMute,
+    onRecordToggle,
+    isRecording = false,
+    currentShader,
+    onShaderChange,
 }: PlayerControlsProps & { loadDisabled?: boolean; saveDisabled?: boolean }) {
 
     return (
@@ -75,6 +80,8 @@ const PlayerControls = memo(function PlayerControls({
                 onSave={onSave}
                 onLoad={onLoad}
                 onScreenshot={onScreenshot}
+                onRecordToggle={onRecordToggle}
+                isRecording={isRecording}
                 disabled={disabled}
                 loadDisabled={loadDisabled}
                 saveDisabled={saveDisabled}
@@ -94,7 +101,11 @@ const PlayerControls = memo(function PlayerControls({
                 onGamepadSettings={onGamepadSettings}
                 onCheats={onCheats}
                 onRetroAchievements={onRetroAchievements}
+                onShowShortcuts={onShowShortcuts}
                 onExit={onExit}
+                currentShader={currentShader}
+                onShaderChange={onShaderChange}
+                isRunning={isRunning}
                 disabled={disabled}
                 systemColor={systemColor}
                 gamepadCount={gamepadCount}

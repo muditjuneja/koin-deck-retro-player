@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Save, Download, Camera } from 'lucide-react';
+import { Save, Download, Camera, Video, Circle } from 'lucide-react';
 import { ControlButton } from './ControlButton';
 import AutoSaveIndicator, { AutoSaveState } from '../UI/AutoSaveIndicator';
 import HardcoreTooltip from '../UI/HardcoreTooltip';
@@ -8,6 +8,8 @@ interface SaveLoadControlsProps {
     onSave: () => void;
     onLoad: () => void;
     onScreenshot: () => void;
+    onRecordToggle?: () => void;
+    isRecording?: boolean;
     disabled?: boolean;
     loadDisabled?: boolean;
     saveDisabled?: boolean;
@@ -26,6 +28,8 @@ export const SaveLoadControls = memo(function SaveLoadControls({
     onSave,
     onLoad,
     onScreenshot,
+    onRecordToggle,
+    isRecording = false,
     disabled = false,
     loadDisabled = false,
     saveDisabled = false,
@@ -80,6 +84,35 @@ export const SaveLoadControls = memo(function SaveLoadControls({
                     systemColor={systemColor}
                 />
             </div>
+
+            {/* Recording button */}
+            {onRecordToggle && (
+                <div className="flex-shrink-0">
+                    <button
+                        onClick={onRecordToggle}
+                        disabled={disabled}
+                        className={`flex flex-col items-center gap-1 px-2 sm:px-3 py-2 rounded-lg transition-all duration-200 hover:bg-white/10 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title={isRecording ? 'Stop recording' : 'Start recording'}
+                    >
+                        <div className="relative">
+                            {isRecording ? (
+                                <>
+                                    <Video size={20} className="text-red-500" />
+                                    <Circle size={8} fill="#FF3333" className="absolute -top-0.5 -right-0.5 animate-pulse text-red-500" />
+                                </>
+                            ) : (
+                                <Video size={20} style={{ color: systemColor }} />
+                            )}
+                        </div>
+                        <span
+                            className="text-[10px] font-bold uppercase tracking-wider"
+                            style={{ color: isRecording ? '#FF3333' : undefined }}
+                        >
+                            {isRecording ? 'REC' : 'Rec'}
+                        </span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 });

@@ -3,6 +3,7 @@ import { useGameUI } from './useGameUI';
 import { useGameSession } from './useGameSession';
 import { useGameSaves } from './useGameSaves';
 import { useGameCheats } from './useGameCheats';
+import { useGameRecording } from './useGameRecording';
 
 export function useGamePlayer(props: GamePlayerProps) {
     // 1. UI State (Toasts, Fullscreen, Refs)
@@ -79,6 +80,20 @@ export function useGamePlayer(props: GamePlayerProps) {
         nostalgist,
     });
 
+    // 5. Recording State (Capture gameplay as video)
+    const {
+        isRecording,
+        isPaused: isRecordingPaused,
+        recordingDuration,
+        startRecording,
+        stopRecording,
+        pauseRecording,
+        resumeRecording,
+        isSupported: recordingSupported,
+    } = useGameRecording({
+        getCanvasElement: () => canvasRef.current,
+    });
+
     return {
         // Refs
         containerRef,
@@ -142,5 +157,15 @@ export function useGamePlayer(props: GamePlayerProps) {
         // Actions
         pause,
         resume,
+
+        // Recording
+        isRecording,
+        isRecordingPaused,
+        recordingDuration,
+        startRecording,
+        stopRecording,
+        pauseRecording,
+        resumeRecording,
+        recordingSupported,
     };
 }

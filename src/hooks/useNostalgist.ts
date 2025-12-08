@@ -30,6 +30,7 @@ interface UseNostalgistOptions {
     onError?: (error: Error) => void;
     initialVolume?: number;
     romFileName?: string;
+    shader?: string; // CRT shader preset (e.g., 'crt/crt-lottes')
 }
 
 export interface UseNostalgistReturn {
@@ -95,6 +96,7 @@ export const useNostalgist = ({
     onError,
     initialVolume = 100,
     romFileName,
+    shader,
 }: UseNostalgistOptions): UseNostalgistReturn => {
     // 0. System Analysis
     // Check if system is heavy (Tier 2) to disable expensive features like manual rewind capture
@@ -134,6 +136,7 @@ export const useNostalgist = ({
         retroAchievements,
         initialVolume,
         romFileName,
+        shader,
         onReady,
         onError,
     });
