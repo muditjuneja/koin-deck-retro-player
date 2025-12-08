@@ -188,3 +188,10 @@ function App() {
 ## License
 
 MIT © [Mudit Juneja](https://github.com/muditjuneja)
+
+## Acknowledgements
+
+This project wouldn't be possible without the incredible work of the open source preservation community:
+
+- **[Nostalgist.js](https://github.com/arianrhodsandlot/nostalgist)** by [arianrhodsandlot](https://github.com/arianrhodsandlot): The foundational WASM runtime that powers our preservation engine.
+- **[Libretro](https://www.libretro.com/)**: For the standardized emulator cores.
