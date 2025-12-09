@@ -48,6 +48,7 @@ interface UseEmulatorCoreReturn {
     screenshot: () => Promise<string | null>;
     resize: (size: { width: number; height: number }) => void;
     getNostalgistInstance: () => Nostalgist | null;
+    isPerformanceMode: boolean;
 }
 
 export function useEmulatorCore({
@@ -71,6 +72,7 @@ export function useEmulatorCore({
     const [isPaused, setIsPaused] = useState(false);
     const [speed, setSpeedState] = useState<SpeedMultiplier>(1);
     const [isFastForwardOn, setIsFastForwardOn] = useState(false);
+    const [isPerformanceMode, setIsPerformanceMode] = useState(false);
 
     const nostalgistRef = useRef<Nostalgist | null>(null);
     const isStartingRef = useRef(false); // Prevent double start
@@ -185,8 +187,16 @@ export function useEmulatorCore({
                 gamepads: gamepadBindings,
             });
 
-            // Get performance optimizations
-            const optimizedConfig = getOptimizedConfig(system);
+            // 2. Get optimized config based on system tier
+            const currentSystem = system;
+            const specificConfig = getOptimizedConfig(currentSystem);
+
+            // Check if performance mode (threading) is active
+            if (specificConfig.video_threaded) {
+                setIsPerformanceMode(true);
+            } else {
+                setIsPerformanceMode(false);
+            }
 
             // Convert volume percentage (0-100) to RetroArch dB format
             // RetroArch audio_volume: 0.0 dB = 100%, -20 dB ≈ 10%, -40 dB ≈ 1%
@@ -217,7 +227,7 @@ export function useEmulatorCore({
                     input_volume_down: 'subtract',
                     input_audio_mute: 'f9',
                     ...inputConfig,
-                    ...optimizedConfig, // Apply system-specific optimizations
+                    ...specificConfig, // Apply system-specific optimizations
                     ...(retroAchievements ? {
                         cheevos_enable: true,
                         cheevos_username: retroAchievements.username,
@@ -505,6 +515,7 @@ export function useEmulatorCore({
         setSpeed,
         screenshot,
         resize,
-        getNostalgistInstance,
+        getNostalgistInstance: () => nostalgistRef.current,
+        isPerformanceMode,
     };
 }

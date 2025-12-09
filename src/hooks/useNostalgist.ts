@@ -80,6 +80,7 @@ export interface UseNostalgistReturn {
 
     // RetroAchievements integration - get access to emulator internals
     getNostalgistInstance: () => Nostalgist | null;
+    isPerformanceMode: boolean;
 }
 
 export const useNostalgist = ({
@@ -124,6 +125,7 @@ export const useNostalgist = ({
         screenshot,
         resize,
         getNostalgistInstance,
+        isPerformanceMode,
     } = useEmulatorCore({
         system,
         romUrl,
@@ -245,6 +247,7 @@ export const useNostalgist = ({
         resetCheats,
 
         getNostalgistInstance,
+        isPerformanceMode,
     }), [
         status, error, isPaused, speed, isRewinding, rewindBufferSize, volume, isMuted,
         prepare, start, stop, restart,
@@ -255,7 +258,8 @@ export const useNostalgist = ({
         setVolume, toggleMute,
         screenshot, pressKey, resize,
         applyCheat, resetCheats,
-        getNostalgistInstance
+        getNostalgistInstance,
+        isPerformanceMode
     ]);
 
     return hookReturn;

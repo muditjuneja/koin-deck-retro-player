@@ -138,6 +138,7 @@ export const GamePlayer = memo(function GamePlayer(
         error,
         isPaused,
         status,
+        isPerformanceMode,
     } = nostalgist;
 
     // Sync volume from persistence on load
@@ -344,6 +345,20 @@ export const GamePlayer = memo(function GamePlayer(
                             coreName={props.core}
                             systemColor={systemColor}
                         />
+                    )}
+
+                    {/* Performance Mode Badge (Always visible when active) */}
+                    {isPerformanceMode && (status === 'running' || status === 'paused') && (
+                        <div
+                            className="bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 flex items-center gap-1.5"
+                            style={{ borderColor: `${systemColor}40` }}
+                            title="High Performance Mode Active (Threaded Video)"
+                        >
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: systemColor, boxShadow: `0 0 8px ${systemColor}` }} />
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-white/90">
+                                High Perf
+                            </span>
+                        </div>
                     )}
 
                     {/* Input Display */}
