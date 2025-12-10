@@ -32,8 +32,6 @@ jobs:
         run: |
           npm ci
           npm run build
-          npm run build:element
-          cp dist/web-component.global.js website/public/
 
       - name: Install & Build Website
         working-directory: ./website
