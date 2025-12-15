@@ -1,4 +1,6 @@
-import { X } from 'lucide-react';
+'use client';
+
+import { Minimize2, X } from 'lucide-react';
 
 interface FloatingExitButtonProps {
     onClick: () => void;
@@ -7,7 +9,7 @@ interface FloatingExitButtonProps {
 
 /**
  * Floating exit button that appears in fullscreen mode
- * Positioned at top-center to avoid collision with virtual controller buttons
+ * Styled to match FloatingFullscreenButton for consistency
  */
 export default function FloatingExitButton({ onClick, disabled = false }: FloatingExitButtonProps) {
     return (
@@ -15,25 +17,28 @@ export default function FloatingExitButton({ onClick, disabled = false }: Floati
             onClick={onClick}
             disabled={disabled}
             className={`
-                fixed top-3 left-1/2 -translate-x-1/2 z-50
-                w-11 h-11 rounded-lg
-                bg-black/90 backdrop-blur-sm
-                border-2 border-white/80
-                shadow-lg
-                flex items-center justify-center
-                transition-all duration-200
+                fixed top-3 right-3 z-50
+                px-3 py-2 rounded-xl
+                bg-black/80 backdrop-blur-md
+                border-2 border-red-400/60
+                shadow-xl
+                flex items-center gap-2
+                transition-all duration-300
                 hover:bg-red-600/30 hover:border-red-400 hover:scale-105
                 active:scale-95
                 disabled:opacity-40 disabled:cursor-not-allowed
                 touch-manipulation
             `}
             style={{
-                paddingTop: 'env(safe-area-inset-top, 0px)'
+                paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)'
             }}
             aria-label="Exit fullscreen"
-            title="Exit fullscreen"
         >
-            <X size={22} className="text-white" />
+            <X size={16} className="text-red-400" />
+            <span className="text-white text-xs font-bold uppercase tracking-wider">
+                Exit
+            </span>
+            <Minimize2 size={14} className="text-white/60" />
         </button>
     );
 }

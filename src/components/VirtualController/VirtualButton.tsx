@@ -18,7 +18,7 @@ export interface VirtualButtonProps {
   customPosition?: { x: number; y: number } | null; // Custom position from drag
   onPositionChange?: (x: number, y: number) => void; // Callback when position changes
   isLandscape?: boolean; // For semi-transparency in landscape
-  systemColor?: string; // Console-specific color for theming
+  console?: string; // The specific console identifier (e.g. 'PSX', 'SNES')
 }
 
 /**
@@ -37,11 +37,11 @@ const VirtualButton = React.memo(function VirtualButton({
   customPosition,
   onPositionChange,
   isLandscape = false,
-  systemColor = '#00FF41', // Default retro green
+  console = '',
 }: VirtualButtonProps) {
   const t = useKoinTranslation();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const isSystemButton = config.type === 'start' || config.type === 'select';
+  const isSystemButton = config.type === 'start' || config.type === 'select' || config.type === 'menu';
   const displayX = customPosition ? customPosition.x : config.x;
   const displayY = customPosition ? customPosition.y : config.y;
 
@@ -94,61 +94,77 @@ const VirtualButton = React.memo(function VirtualButton({
   const topPercent = (displayY / 100) * containerHeight - config.size / 2;
 
   // Use transform for hardware acceleration
-  // We use translate3d to force GPU layer promotion
   const transform = `translate3d(${leftPercent.toFixed(1)}px, ${topPercent.toFixed(1)}px, 0)`;
 
   // Get button styles
-  const styles = getButtonStyles(config.type, isPressed);
+  const styles = getButtonStyles(config.type, isPressed, console);
 
-  // A/B buttons are circular, others are square
-  const isActionButton = config.type === 'a' || config.type === 'b';
-  const borderRadius = isActionButton ? '50%' : '0';
+  // Shape handling
+  let borderRadius = '50%'; // Default circle
+  let width = `${config.size}px`;
+  // Aspect ratio adjustments for non-circle shapes
+  if (config.shape === 'pill') {
+    borderRadius = '20px';
+    width = `${config.size * 1.8}px`; // Wider
+  } else if (config.shape === 'rect') {
+    borderRadius = '8px';
+    width = `${config.size * 2.5}px`; // Much wider (shoulders)
+  } else if (config.shape === 'square') {
+    borderRadius = '12px';
+  } else {
+    // Default to circle, but check type if shape not explicitly set
+    // A/B/X/Y/C/D/Z are typically circles
+    // L/R are typically rects or specialized shapes
+    if (['l', 'r', 'l2', 'r2'].includes(config.type)) {
+      borderRadius = '10px';
+      width = `${config.size * 2}px`;
+    }
+  }
 
-  // When pressed, use system color
-  const pressedStyle = isPressed ? {
-    backgroundColor: systemColor,
-    color: '#000000',
-    borderColor: '#FFFFFF',
-  } : {};
+
 
   return (
     <button
       ref={buttonRef}
       className={`
-        absolute border-4 font-heading font-bold uppercase tracking-wider
-        transition-all duration-100 select-none
+        absolute flex items-center justify-center
+        font-heading font-bold uppercase tracking-wider
+        transition-all duration-75 select-none
         pointer-events-auto touch-manipulation
-        ${isPressed ? '' : `${styles.bg} ${styles.text} ${styles.border} ${styles.shadow}`} ${styles.transform}
-        active:translate-x-[3px] active:translate-y-[3px] active:shadow-none
+        backdrop-blur-sm
+        ${isPressed ? '' : `${styles.bg} ${styles.border} ${styles.shadow}`} 
+        ${styles.text}
+        active:shadow-none
       `}
       style={{
-        // Remove left/top and use transform instead for high performance (compositor only)
         top: 0,
         left: 0,
-        transform,
+        transform: transform + (isPressed ? ' scale(0.95)' : ''),
         willChange: 'transform',
-        width: `${config.size}px`,
-        height: `${config.size}px`,
+        width: width,
+        height: `${config.size}px`, // Height stays consistent
         minWidth: `${config.size}px`,
-        minHeight: `${config.size}px`,
-        fontSize: config.size < 50 ? '10px' : '12px',
+        fontSize: config.size < 50 ? '11px' : '16px',
         borderRadius,
+        borderWidth: isPressed ? '0px' : '1.5px', // slightly thicker border
         lineHeight: '1',
         // Semi-transparent in landscape mode
         opacity: isLandscape ? 0.85 : 1,
-        // Prevent context menu on long-press
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
         userSelect: 'none',
-        ...pressedStyle,
+        // Direct style overrides if needed from getButtonStyles (for exact hex colors)
+        backgroundColor: isPressed ? styles.bg.startsWith('bg-') ? undefined : styles.bg : styles.bg.startsWith('bg-') ? undefined : styles.bg,
+        borderColor: isPressed ? undefined : styles.border.startsWith('border-') ? undefined : styles.border,
+        color: styles.text.startsWith('text-') ? undefined : styles.text,
       }}
       aria-label={label}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {label}
+      {/* Icon rendering logic could go here, for now using label */}
+      <span className="drop-shadow-md">{label}</span>
     </button>
   );
 });
 
 export default VirtualButton;
-

@@ -15,6 +15,7 @@ import {
   getViewportSize,
   createOrientationChangeHandler,
 } from './utils/viewport';
+import ControlsHint from './ControlsHint';
 
 export interface VirtualControllerProps {
   system: string;
@@ -50,9 +51,12 @@ export default function VirtualController({
     return btn.showInLandscape;
   });
 
-  // Separate D-pad buttons from other buttons
+  // Separate D-pad buttons from other buttons (though we rely on the Dpad component for directions)
+  // We keep them in the layout definition for completeness or future fallback
   const DPAD_TYPES = ['up', 'down', 'left', 'right'];
-  const dpadButtons = visibleButtons.filter(btn => DPAD_TYPES.includes(btn.type));
+
+  // NOTE: Unlike before, we don't render individual d-pad buttons from the layout array.
+  // The Dpad component handles all directional input.
 
   // Update container size and fullscreen state
   useEffect(() => {
@@ -126,7 +130,7 @@ export default function VirtualController({
   );
 
   // System buttons that work with tap (press + release)
-  const SYSTEM_BUTTONS = ['start', 'select'];
+  const SYSTEM_BUTTONS = ['start', 'select', 'menu'];
 
   // Handle system buttons (start/select) - tap to press and release
   const handlePress = useCallback(
@@ -220,7 +224,6 @@ export default function VirtualController({
   }, [isRunning, pressedButtons, handleRelease]);
 
   // Optimize: Memoize button configurations to prevent creating new objects on every render
-  // This ensures VirtualButton's React.memo works correctly when only 'isPressed' changes
   const memoizedButtonElements = useMemo(() => {
     // Use window dimensions if container size not yet calculated
     const width = containerSize.width || (typeof window !== 'undefined' ? window.innerWidth : 0);
@@ -249,11 +252,12 @@ export default function VirtualController({
     return null;
   }
 
-  // Don't render if no visible buttons
-  if (visibleButtons.length === 0) {
-    return null;
-  }
+  // Responsive sizing for D-pad
+  const dpadSize = containerSize.width > containerSize.height ? 160 : 180;
+  const dpadY = containerSize.width > containerSize.height ? 55 : 62;
 
+  // For Neo Geo, D-pad might need to be slightly higher to avoid overlap if 4 buttons are curved
+  const finalDpadY = system.toUpperCase() === 'NEOGEO' ? dpadY - 5 : dpadY;
 
   return (
     <div
@@ -261,18 +265,18 @@ export default function VirtualController({
       style={{ touchAction: 'none' }}
     >
       {/* Unified D-pad */}
-      {dpadButtons.length > 0 && (
-        <Dpad
-          size={containerSize.width > containerSize.height ? 120 : 130}
-          x={12}
-          y={containerSize.width > containerSize.height ? 52 : 62}
-          containerWidth={containerSize.width || window.innerWidth}
-          containerHeight={containerSize.height || window.innerHeight}
-          controls={controls}
-          systemColor={systemColor}
-          isLandscape={isLandscape}
-        />
-      )}
+      <Dpad
+        size={dpadSize}
+        x={14}
+        y={finalDpadY}
+        containerWidth={containerSize.width || window.innerWidth}
+        containerHeight={containerSize.height || window.innerHeight}
+        controls={controls}
+        systemColor={systemColor}
+        isLandscape={isLandscape}
+        customPosition={getPosition('up', isLandscape)} // 'up' acts as dpad position key
+        onPositionChange={(x, y) => savePosition('up', x, y, isLandscape)}
+      />
 
       {/* Other buttons (A, B, Start, Select, etc.) */}
       {memoizedButtonElements
@@ -290,10 +294,11 @@ export default function VirtualController({
             customPosition={customPosition}
             onPositionChange={(x, y) => savePosition(buttonConfig.type, x, y, isLandscape)}
             isLandscape={isLandscape}
-            systemColor={systemColor}
-          />
-        ))}
+            console={layout.console} // Important: pass the specific console for styling
+          />))}
+
+      {/* First-time hint */}
+      <ControlsHint isVisible={isRunning} />
     </div>
   );
 }
-

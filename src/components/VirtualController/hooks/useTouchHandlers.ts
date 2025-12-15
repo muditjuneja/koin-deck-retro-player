@@ -28,7 +28,7 @@ export interface TouchHandlers {
   cleanup: () => void;
 }
 
-const DRAG_HOLD_DELAY = 300; // ms
+const DRAG_HOLD_DELAY = 350; // ms - aligned with Dpad
 const DRAG_MOVE_THRESHOLD = 10; // pixels
 const DRAG_CENTER_THRESHOLD = 0.4; // 40% of button size
 
@@ -64,6 +64,10 @@ export function useTouchHandlers({
         x: touchX - (displayX / 100) * containerWidth,
         y: touchY - (displayY / 100) * containerHeight,
       };
+      // Haptic feedback for drag activation (matches D-pad)
+      if (navigator.vibrate) {
+        navigator.vibrate([10, 30, 10]);
+      }
       // Release button press when drag starts
       if (!isSystemButton) {
         onRelease(buttonType);

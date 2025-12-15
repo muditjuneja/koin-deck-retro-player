@@ -9,7 +9,7 @@
  */
 export type ButtonId =
     | 'up' | 'down' | 'left' | 'right'  // D-pad
-    | 'a' | 'b' | 'x' | 'y'              // Face buttons
+    | 'a' | 'b' | 'x' | 'y'              // Face buttons (standard RetroPad)
     | 'l' | 'r'                          // Shoulder buttons
     | 'l2' | 'r2'                        // Triggers (PS1, Saturn, etc.)
     | 'l3' | 'r3'                        // Stick clicks (PS1 analog)

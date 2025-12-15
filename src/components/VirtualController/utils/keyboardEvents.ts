@@ -11,16 +11,13 @@ export function getKeyboardCode(
   buttonType: string,
   controls?: ControlMapping
 ): string | null {
-  const controlMapping: ControlMapping = controls || DEFAULT_CONTROLS;
-  
-  // Map Genesis 'c' button to 'x' in controls (since controls use SNES layout)
-  const mappingKey = buttonType === 'c' ? 'x' : buttonType;
-  const key = mappingKey as keyof ControlMapping;
-  
-  if (key in controlMapping) {
-    return controlMapping[key] ?? null;
+  const key = buttonType as keyof ControlMapping;
+
+  if (controls && key in controls && controls[key]) {
+    return controls[key]!;
   }
-  return null;
+
+  return DEFAULT_CONTROLS[key] ?? null;
 }
 
 /**
@@ -38,8 +35,8 @@ export function getKeyName(code: string): string {
  * Find the emulator canvas element
  */
 export function getCanvas(): HTMLCanvasElement | null {
-  return document.querySelector('.game-canvas-container canvas') as HTMLCanvasElement || 
-         document.querySelector('canvas') as HTMLCanvasElement;
+  return document.querySelector('.game-canvas-container canvas') as HTMLCanvasElement ||
+    document.querySelector('canvas') as HTMLCanvasElement;
 }
 
 /**
