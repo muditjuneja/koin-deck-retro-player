@@ -2,7 +2,7 @@ import Link from "next/link";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoCard } from "@/components/ui/NeoCard";
 import { CodeBlock } from "@/components/ui/CodeBlock";
-import { LiveDemo } from "@/components/LiveDemo";
+
 
 export default function Home() {
   return (
@@ -87,35 +87,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Live Demo Section */}
-      <section id="demo" className="py-16 bg-zinc-100 border-y-4 border-black">
-        <div className="max-w-5xl mx-auto px-4 md:px-12">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-display font-black uppercase">
-              Try It <span className="bg-retro-green px-2">Now</span>
-            </h2>
-            <p className="font-mono text-zinc-600 mt-2">
-              Flappy Bird (NES Homebrew) — fully playable in your browser
-            </p>
-          </div>
 
-          <LiveDemo />
-
-          <div className="mt-6 text-center">
-            <div className="inline-flex flex-wrap justify-center gap-2 font-mono text-xs">
-              <span className="border-4 border-black px-3 py-2 bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <kbd className="font-bold">↑↓←→</kbd> Move
-              </span>
-              <span className="border-4 border-black px-3 py-2 bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <kbd className="font-bold">X</kbd> / <kbd className="font-bold">Z</kbd> Buttons
-              </span>
-              <span className="border-4 border-black px-3 py-2 bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <kbd className="font-bold">Enter</kbd> Start
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Features Grid */}
       <section className="bg-white py-20">

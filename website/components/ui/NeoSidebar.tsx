@@ -13,7 +13,7 @@ const items = [
     { name: 'API Reference', href: '/docs/api' },
     { name: 'System Compatibility', href: '/docs/systems' },
     { name: 'Core Showcase', href: '/docs/showcase' },
-    { name: 'Live Demo', href: '/#demo' },
+    { name: 'Live Demo', href: '/docs/showcase/dashboard' },
 ];
 
 export function NeoSidebar() {
