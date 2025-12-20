@@ -47,6 +47,8 @@ export const fr: KoinTranslations = {
         exit: 'Quitter',
         language: 'Langue',
         selectLanguage: 'Choisir la langue',
+        haptics: 'Vibration',
+        enableHaptics: 'Activer la vibration',
     },
     overlay: {
         play: 'JOUER',
@@ -130,6 +132,9 @@ export const fr: KoinTranslations = {
             copy: 'Copier',
             active: '{{count}} actif(s)',
             toggleHint: 'Cliquez pour activer/désactiver',
+            codePlaceholder: 'Entrez le code (ex: 00C-048-E6E)',
+            descPlaceholder: 'Description (optionnel)',
+            add: 'Ajouter',
         },
         saveSlots: {
             title: 'Sauvegardes',

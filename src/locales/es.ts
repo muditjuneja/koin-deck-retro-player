@@ -47,6 +47,8 @@ export const es: KoinTranslations = {
         exit: 'Salir',
         language: 'Idioma',
         selectLanguage: 'Seleccionar idioma',
+        haptics: 'Vibración',
+        enableHaptics: 'Habilitar vibración',
     },
     overlay: {
         play: 'JUGAR',
@@ -130,6 +132,9 @@ export const es: KoinTranslations = {
             copy: 'Copiar código',
             active: '{{count}} truco{{s}} activo(s)',
             toggleHint: 'Haz clic para activar/desactivar',
+            codePlaceholder: 'Introduce código (ej: 00C-048-E6E)',
+            descPlaceholder: 'Descripción (opcional)',
+            add: 'Añadir truco',
         },
         saveSlots: {
             title: 'Guardar partida',

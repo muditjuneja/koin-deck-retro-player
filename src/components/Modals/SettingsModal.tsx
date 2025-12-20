@@ -1,6 +1,6 @@
 'use client';
 
-import { Globe, Check, Settings } from 'lucide-react';
+import { Globe, Check, Settings, Zap } from 'lucide-react';
 import { useKoinTranslation } from '../../hooks/useKoinTranslation';
 import ModalShell from './ModalShell';
 
@@ -10,6 +10,8 @@ interface SettingsModalProps {
     currentLanguage: string;
     onLanguageChange: (lang: 'en' | 'es' | 'fr') => void;
     systemColor?: string;
+    hapticsEnabled: boolean;
+    onToggleHaptics: () => void;
 }
 
 export default function SettingsModal({
@@ -18,6 +20,8 @@ export default function SettingsModal({
     currentLanguage,
     onLanguageChange,
     systemColor = '#00FF41',
+    hapticsEnabled,
+    onToggleHaptics,
 }: SettingsModalProps) {
     const t = useKoinTranslation();
 
@@ -75,6 +79,31 @@ export default function SettingsModal({
                             );
                         })}
                     </div>
+                </div>
+                {/* Haptics Section */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                        <Zap size={16} />
+                        <span>{t.settings.haptics}</span>
+                    </div>
+
+                    <button
+                        onClick={onToggleHaptics}
+                        className={`
+                            w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all
+                            ${hapticsEnabled
+                                ? 'bg-white/10 border-white/20 text-white'
+                                : 'bg-black/20 border-transparent text-gray-400 hover:bg-white/5 hover:text-white'
+                            }
+                        `}
+                    >
+                        <span>{t.settings.enableHaptics}</span>
+                        <div className={`w-10 h-6 rounded-full p-1 transition-colors ${hapticsEnabled ? 'bg-[#00FF41]' : 'bg-gray-700'}`}>
+                            <div
+                                className={`w-4 h-4 rounded-full bg-white transition-transform ${hapticsEnabled ? 'translate-x-4' : 'translate-x-0'}`}
+                            />
+                        </div>
+                    </button>
                 </div>
             </div>
         </ModalShell>

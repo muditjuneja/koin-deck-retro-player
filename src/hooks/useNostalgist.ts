@@ -32,6 +32,7 @@ interface UseNostalgistOptions {
     romFileName?: string;
     shader?: string; // CRT shader preset (e.g., 'crt/crt-lottes')
     romId?: string;
+    activeCheats?: { code: string; desc?: string }[]; // Cheats to apply at launch
 }
 
 export interface UseNostalgistReturn {
@@ -73,11 +74,13 @@ export interface UseNostalgistReturn {
     // Utils
     screenshot: () => Promise<string | null>;
     pressKey: (key: string) => void;
+    pressDown: (button: string) => void;
+    pressUp: (button: string) => void;
     resize: (size: { width: number; height: number }) => void;
 
-    // Cheats
-    applyCheat: (code: string) => void;
-    resetCheats: () => void;
+    // Cheats - low-level injection API
+    injectCheats: (cheats: { code: string }[]) => void;
+    clearCheats: () => void;
 
     // RetroAchievements integration - get access to emulator internals
     getNostalgistInstance: () => Nostalgist | null;
@@ -101,6 +104,8 @@ export const useNostalgist = ({
     shader,
     romId,
 }: UseNostalgistOptions): UseNostalgistReturn => {
+
+
     // 0. System Analysis
     // Check if system is heavy (Tier 2) to disable expensive features like manual rewind capture
     const isHeavySystem = useMemo(() => {
@@ -157,9 +162,11 @@ export const useNostalgist = ({
         initialVolume,
     });
 
-    // 3. Input Logic (Press Key)
+    // 3. Input Logic (Press Key, Press Down/Up)
     const {
         pressKey,
+        pressDown,
+        pressUp,
     } = useEmulatorInput({
         nostalgistRef,
     });
@@ -183,10 +190,10 @@ export const useNostalgist = ({
         rewindEnabled: !isHeavySystem, // Disable manual rewind loop for heavy systems
     });
 
-    // 5. Cheats Logic
+    // 5. Cheats Logic (stateless injector)
     const {
-        applyCheat,
-        resetCheats,
+        injectCheats,
+        clearCheats,
     } = useEmulatorCheats({
         nostalgistRef,
     });
@@ -244,10 +251,12 @@ export const useNostalgist = ({
 
         screenshot,
         pressKey,
+        pressDown,
+        pressUp,
         resize,
 
-        applyCheat,
-        resetCheats,
+        injectCheats,
+        clearCheats,
 
         getNostalgistInstance,
         isPerformanceMode,
@@ -259,8 +268,8 @@ export const useNostalgist = ({
         setSpeed, startRewind, stopRewind,
         isHeavySystem,
         setVolume, toggleMute,
-        screenshot, pressKey, resize,
-        applyCheat, resetCheats,
+        screenshot, pressKey, pressDown, pressUp, resize,
+        injectCheats, clearCheats,
         getNostalgistInstance,
         isPerformanceMode
     ]);

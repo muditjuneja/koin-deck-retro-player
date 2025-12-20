@@ -21,7 +21,7 @@ export default function LockButton({
     return (
         <button
             onClick={onToggle}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto p-2 rounded-full backdrop-blur-sm transition-all active:scale-95"
+            className="pointer-events-auto p-2 rounded-full backdrop-blur-sm transition-all active:scale-95"
             style={{
                 backgroundColor: isLocked ? 'rgba(0,0,0,0.6)' : `${systemColor}20`,
                 border: `1px solid ${isLocked ? 'rgba(255,255,255,0.2)' : systemColor}`,

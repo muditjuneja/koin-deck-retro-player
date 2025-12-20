@@ -19,6 +19,7 @@ export interface UseTouchHandlersProps {
   onPressDown?: (buttonType: string) => void;
   onRelease: (buttonType: string) => void;
   onPositionChange?: (x: number, y: number) => void;
+  hapticsEnabled?: boolean;
 }
 
 export interface TouchHandlers {
@@ -41,6 +42,7 @@ export function useTouchHandlers({
   onPressDown,
   onRelease,
   onPositionChange,
+  hapticsEnabled = true,
 }: UseTouchHandlersProps): TouchHandlers {
   const isDraggingRef = useRef(false);
 
@@ -74,7 +76,7 @@ export function useTouchHandlers({
       e.stopPropagation();
 
       // Haptic feedback for tactile response
-      if (navigator.vibrate) {
+      if (hapticsEnabled && navigator.vibrate) {
         navigator.vibrate(8); // Very short 8ms pulse
       }
 

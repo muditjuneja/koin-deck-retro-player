@@ -74,10 +74,13 @@ export function useGamePlayer(props: GamePlayerProps) {
         cheatsModalOpen,
         setCheatsModalOpen,
         activeCheats,
+        allCheats,
         handleToggleCheat,
+        handleAddManualCheat,
     } = useGameCheats({
         ...props,
         nostalgist,
+        showToast,
     });
 
     // 5. Recording State (Capture gameplay as video)
@@ -143,7 +146,9 @@ export function useGamePlayer(props: GamePlayerProps) {
 
         // Cheats
         activeCheats,
+        allCheats,
         handleToggleCheat,
+        handleAddManualCheat,
 
         // Emulator
         nostalgist,

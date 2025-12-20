@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useRef, useCallback } from 'react';
-import { dispatchKeyboardEvent } from './utils/keyboardEvents';
 import { useDrag } from './hooks/useDrag';
 import { useTouchEvents } from './hooks/useTouchEvents';
-import { ControlMapping } from '../../lib/controls/types';
 
 interface DpadProps {
     size?: number;
@@ -12,11 +10,15 @@ interface DpadProps {
     y: number;
     containerWidth: number;
     containerHeight: number;
-    controls?: ControlMapping;
     systemColor?: string;
     isLandscape?: boolean;
     customPosition?: { x: number; y: number } | null;
     onPositionChange?: (x: number, y: number) => void;
+    hapticsEnabled?: boolean;
+    /** Callback when direction is pressed - uses Nostalgist API */
+    onButtonDown: (button: string) => void;
+    /** Callback when direction is released - uses Nostalgist API */
+    onButtonUp: (button: string) => void;
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -35,11 +37,13 @@ const Dpad = React.memo(function Dpad({
     y,
     containerWidth,
     containerHeight,
-    controls,
     systemColor = '#00FF41',
     isLandscape = false,
     customPosition,
     onPositionChange,
+    hapticsEnabled = true,
+    onButtonDown,
+    onButtonUp,
 }: DpadProps) {
     const dpadRef = useRef<HTMLDivElement>(null);
     const activeTouchRef = useRef<number | null>(null);
@@ -57,26 +61,12 @@ const Dpad = React.memo(function Dpad({
     const displayY = customPosition ? customPosition.y : y;
 
     // Release all active directions helper
-    const releaseAllDirections = useCallback((getKeyCode: (dir: Direction) => string) => {
-        activeDirectionsRef.current.forEach(dir => {
-            const keyCode = getKeyCode(dir);
-            if (keyCode) dispatchKeyboardEvent('keyup', keyCode);
-        });
+    const releaseAllDirections = useCallback(() => {
+        activeDirectionsRef.current.forEach(dir => onButtonUp(dir));
         activeDirectionsRef.current = new Set();
-    }, []);
+    }, [onButtonUp]);
 
-    const getKeyCode = useCallback((direction: Direction): string => {
-        if (!controls) {
-            const defaults: Record<Direction, string> = {
-                up: 'ArrowUp',
-                down: 'ArrowDown',
-                left: 'ArrowLeft',
-                right: 'ArrowRight',
-            };
-            return defaults[direction];
-        }
-        return controls[direction] || '';
-    }, [controls]);
+
 
     // Use shared drag hook
     const drag = useDrag({
@@ -89,7 +79,7 @@ const Dpad = React.memo(function Dpad({
         centerThreshold: CENTER_TOUCH_RADIUS,
         onDragStart: () => {
             // Release all directions when entering drag mode
-            releaseAllDirections(getKeyCode);
+            releaseAllDirections();
             updateVisuals(new Set());
         },
     });
@@ -147,26 +137,24 @@ const Dpad = React.memo(function Dpad({
     const updateDirections = useCallback((newDirections: Set<Direction>) => {
         const prev = activeDirectionsRef.current;
 
+        // Release directions no longer pressed
         prev.forEach(dir => {
             if (!newDirections.has(dir)) {
-                const keyCode = getKeyCode(dir);
-                if (keyCode) dispatchKeyboardEvent('keyup', keyCode);
+                onButtonUp(dir);
             }
         });
 
+        // Press new directions
         newDirections.forEach(dir => {
             if (!prev.has(dir)) {
-                const keyCode = getKeyCode(dir);
-                if (keyCode) {
-                    if (navigator.vibrate) navigator.vibrate(5);
-                    dispatchKeyboardEvent('keydown', keyCode);
-                }
+                if (hapticsEnabled && navigator.vibrate) navigator.vibrate(5);
+                onButtonDown(dir);
             }
         });
 
         activeDirectionsRef.current = newDirections;
         updateVisuals(newDirections);
-    }, [getKeyCode, updateVisuals]);
+    }, [updateVisuals, onButtonDown, onButtonUp, hapticsEnabled]);
 
     const handleTouchStart = useCallback((e: TouchEvent) => {
         e.preventDefault();
@@ -243,16 +231,13 @@ const Dpad = React.memo(function Dpad({
             if (drag.isDragging) {
                 drag.handleDragEnd();
             } else {
-                // Release all directions
-                activeDirectionsRef.current.forEach(dir => {
-                    const keyCode = getKeyCode(dir);
-                    if (keyCode) dispatchKeyboardEvent('keyup', keyCode);
-                });
+                // Release all directions using Nostalgist API
+                activeDirectionsRef.current.forEach(dir => onButtonUp(dir));
                 activeDirectionsRef.current = new Set();
                 updateVisuals(new Set());
             }
         }
-    }, [getKeyCode, updateVisuals, drag]);
+    }, [updateVisuals, drag, onButtonUp]);
 
     // Use shared touch events hook for event listener management
     useTouchEvents(dpadRef, {

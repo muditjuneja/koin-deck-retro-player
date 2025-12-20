@@ -22,9 +22,10 @@ interface GameModalsProps {
 
     cheatsModalOpen: boolean;
     setCheatsModalOpen: (open: boolean) => void;
-    cheats: any[]; // Using any[] for Cheat type
-    activeCheats: Set<number>;
-    onToggleCheat: (cheatId: number) => void;
+    cheats: any[]; // Unified cheat list
+    activeCheats: Set<string>;
+    onToggleCheat: (cheatId: string) => void;
+    onAddManualCheat?: (code: string, description: string) => void;
 
     // Save Slot Modal
     saveModalOpen: boolean;
@@ -51,6 +52,8 @@ interface GameModalsProps {
     setSettingsModalOpen: (open: boolean) => void;
     currentLanguage: string;
     onLanguageChange: (lang: 'en' | 'es' | 'fr') => void;
+    hapticsEnabled: boolean;
+    onToggleHaptics: () => void;
 }
 
 export default function GameModals({
@@ -71,6 +74,7 @@ export default function GameModals({
     cheats,
     activeCheats,
     onToggleCheat,
+    onAddManualCheat,
 
     saveModalOpen,
     setSaveModalOpen,
@@ -94,6 +98,8 @@ export default function GameModals({
     setSettingsModalOpen,
     currentLanguage,
     onLanguageChange,
+    hapticsEnabled,
+    onToggleHaptics,
 }: GameModalsProps) {
     return (
         <>
@@ -123,6 +129,7 @@ export default function GameModals({
                 cheats={cheats}
                 activeCheats={activeCheats}
                 onToggle={onToggleCheat}
+                onAddManualCheat={onAddManualCheat}
                 onClose={() => {
                     setCheatsModalOpen(false);
                     onResume();
@@ -170,6 +177,8 @@ export default function GameModals({
                 currentLanguage={currentLanguage}
                 onLanguageChange={onLanguageChange}
                 systemColor={systemColor}
+                hapticsEnabled={hapticsEnabled}
+                onToggleHaptics={onToggleHaptics}
             />
         </>
     );

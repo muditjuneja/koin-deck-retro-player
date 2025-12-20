@@ -45,6 +45,8 @@ export interface KoinTranslations {
         exit: string;
         language: string;
         selectLanguage: string;
+        haptics: string;
+        enableHaptics: string;
     };
     overlay: {
         play: string;
@@ -129,6 +131,9 @@ export interface KoinTranslations {
             copy: string;
             active: string;
             toggleHint: string;
+            codePlaceholder: string;
+            descPlaceholder: string;
+            add: string;
         },
         saveSlots: {
             title: string;

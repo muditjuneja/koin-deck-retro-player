@@ -168,15 +168,19 @@ export interface ControlMapperProps {
 export interface CheatModalProps {
     isOpen: boolean;
     cheats: Cheat[];
-    activeCheats: Set<number>;
-    onToggle: (cheatId: number) => void;
+    activeCheats: Set<string>;
+    onToggle: (cheatId: string) => void;
     onClose: () => void;
+    onAddManualCheat?: (code: string, description: string) => void;
 }
 
+export type CheatSource = 'database' | 'manual';
+
 export interface Cheat {
-    id: number;
+    id: string;
     code: string;
     description: string;
+    source?: CheatSource; // Optional for backwards compatibility during migration
 }
 
 // Toast interface removed to avoid duplication with useToast hook

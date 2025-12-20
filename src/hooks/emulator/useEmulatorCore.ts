@@ -218,6 +218,7 @@ export function useEmulatorCore({
             // Get canvas element at prepare time (not hook initialization time)
             const canvasElement = getCanvasElement?.() || '';
 
+
             const prepareOptions: any = {
                 core,
                 rom: romOption,
@@ -236,6 +237,11 @@ export function useEmulatorCore({
                     input_volume_up: 'add',
                     input_volume_down: 'subtract',
                     input_audio_mute: 'f9',
+                    // Cheat hotkeys
+                    quick_menu_show_cheats: true,
+                    input_cheat_index_plus: 'y',
+                    input_cheat_index_minus: 't',
+                    input_cheat_toggle: 'u',
                     ...inputConfig,
                     ...specificConfig, // Apply system-specific optimizations
                     ...(retroAchievements ? {
@@ -273,6 +279,9 @@ export function useEmulatorCore({
             const nostalgist = await Nostalgist.prepare(prepareOptions);
 
             nostalgistRef.current = nostalgist;
+
+
+
             setStatus('ready');
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to prepare emulator';
@@ -355,28 +364,25 @@ export function useEmulatorCore({
         };
     }, [stop]);
 
-    // Restart the emulator (soft reset)
+    // Restart the emulator (full restart with fresh config for cheats)
     const restart = useCallback(async () => {
         if (nostalgistRef.current) {
             try {
-                // Restart is synchronous but emulator needs time to process
-                nostalgistRef.current.restart();
+                console.log('[Nostalgist] Full restart - stopping, re-preparing with fresh config, starting');
 
-                // Small delay to let the emulator process the restart
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Full stop
+                stop();
 
-                // Ensure emulator is running after restart
-                nostalgistRef.current.resume();
-                setIsPaused(false);
-                setStatus('running');
+                // Re-prepare with fresh config (this reads getActiveCheats() for new cheats)
+                await prepare();
+
+                // Start again
+                await start();
             } catch (err) {
                 console.error('[Nostalgist] Restart error:', err);
-                // If restart fails, try full stop and start
-                stop();
-                await start();
             }
         }
-    }, [stop, start]);
+    }, [stop, prepare, start]);
 
     // Pause
     const pause = useCallback(() => {
@@ -503,9 +509,7 @@ export function useEmulatorCore({
     }, []);
 
     // Get raw Nostalgist instance (for advanced usage)
-    const getNostalgistInstance = useCallback((): Nostalgist | null => {
-        return nostalgistRef.current;
-    }, []);
+
 
     return {
         status,

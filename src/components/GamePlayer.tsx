@@ -104,7 +104,9 @@ const GamePlayerInner = memo(function GamePlayerInner(
 
         // Cheats
         activeCheats,
+        allCheats,
         handleToggleCheat,
+        handleAddManualCheat,
 
         // Emulator Instance & State
         nostalgist, // Contains start, restart, etc.
@@ -176,7 +178,7 @@ const GamePlayerInner = memo(function GamePlayerInner(
         }
     }, [settingsLoaded]); // Run once when loaded
 
-    const { system, systemColor = '#00FF41', cheats = [], onExit } = props;
+    const { system, systemColor = '#00FF41', onExit } = props;
 
     // -- Memoized Handlers --
 
@@ -250,6 +252,10 @@ const GamePlayerInner = memo(function GamePlayerInner(
     const handleToggleInputDisplay = useCallback(() => {
         updateSettings({ showInputDisplay: !settings.showInputDisplay });
     }, [updateSettings, settings.showInputDisplay]);
+
+    const handleToggleHaptics = useCallback(() => {
+        updateSettings({ hapticsEnabled: !settings.hapticsEnabled });
+    }, [updateSettings, settings.hapticsEnabled]);
 
     // Recording Toggle Handler (F5) - with auto-download
     const handleToggleRecording = useCallback(async () => {
@@ -346,6 +352,11 @@ const GamePlayerInner = memo(function GamePlayerInner(
                             isRunning={status === 'running' || status === 'paused'}
                             controls={controls}
                             systemColor={systemColor}
+                            hapticsEnabled={settings.hapticsEnabled}
+                            onButtonDown={nostalgist.pressDown}
+                            onButtonUp={nostalgist.pressUp}
+                            onPause={nostalgist.pause}
+                            onResume={nostalgist.resume}
                         />
                     )}
 
@@ -507,9 +518,10 @@ const GamePlayerInner = memo(function GamePlayerInner(
 
                     cheatsModalOpen={cheatsModalOpen}
                     setCheatsModalOpen={setCheatsModalOpen}
-                    cheats={cheats}
+                    cheats={allCheats}
                     activeCheats={activeCheats}
                     onToggleCheat={handleToggleCheat}
+                    onAddManualCheat={handleAddManualCheat}
 
                     saveModalOpen={saveModalOpen}
                     setSaveModalOpen={setSaveModalOpen}
@@ -534,6 +546,8 @@ const GamePlayerInner = memo(function GamePlayerInner(
                     // Props passed from wrapper
                     currentLanguage={(props as any).currentLanguage}
                     onLanguageChange={(props as any).onLanguageChange}
+                    hapticsEnabled={settings.hapticsEnabled}
+                    onToggleHaptics={handleToggleHaptics}
                 />
 
                 {/* RASidebar */}

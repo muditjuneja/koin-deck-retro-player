@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
+import { Hand, Zap } from 'lucide-react';
 import { ButtonConfig } from './layouts';
 import { useTouchHandlers } from './hooks/useTouchHandlers';
 import { useTouchEvents } from './hooks/useTouchEvents';
@@ -16,10 +17,17 @@ export interface VirtualButtonProps {
   onRelease: (buttonType: string) => void;
   containerWidth: number;
   containerHeight: number;
-  customPosition?: { x: number; y: number } | null; // Custom position from drag
-  onPositionChange?: (x: number, y: number) => void; // Callback when position changes
-  isLandscape?: boolean; // For semi-transparency in landscape
-  console?: string; // The specific console identifier (e.g. 'PSX', 'SNES')
+  customPosition?: { x: number; y: number } | null;
+  onPositionChange?: (x: number, y: number) => void;
+  isLandscape?: boolean;
+  console?: string;
+  hapticsEnabled?: boolean;
+  /** Current mode: normal, hold, or turbo */
+  mode?: 'normal' | 'hold' | 'turbo';
+  /** Button is currently held (in hold mode) */
+  isHeld?: boolean;
+  /** Button is being turbo-fired */
+  isInTurbo?: boolean;
 }
 
 /**
@@ -39,6 +47,10 @@ const VirtualButton = React.memo(function VirtualButton({
   onPositionChange,
   isLandscape = false,
   console = '',
+  hapticsEnabled = true,
+  mode = 'normal',
+  isHeld = false,
+  isInTurbo = false,
 }: VirtualButtonProps) {
   const t = useKoinTranslation();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -69,6 +81,7 @@ const VirtualButton = React.memo(function VirtualButton({
     onPressDown,
     onRelease,
     onPositionChange,
+    hapticsEnabled, // Pass haptics setting
   });
 
   // Use shared touch events hook for event listener management
@@ -151,7 +164,29 @@ const VirtualButton = React.memo(function VirtualButton({
       aria-label={label}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* Icon rendering logic could go here, for now using label */}
+      {/* Mode indicator icon - top right corner */}
+      {(mode !== 'normal' || isHeld || isInTurbo) && (
+        <span
+          className="absolute -top-1 -right-1 rounded-full flex items-center justify-center"
+          style={{
+            width: '16px',
+            height: '16px',
+            backgroundColor: isHeld ? '#22c55e' : isInTurbo ? '#fbbf24' : 'rgba(255,255,255,0.2)',
+            animation: isInTurbo ? 'pulse 0.5s infinite' : 'none',
+          }}
+        >
+          {isHeld ? (
+            <Hand size={10} color="white" strokeWidth={3} />
+          ) : isInTurbo ? (
+            <Zap size={10} color="white" fill="white" />
+          ) : mode === 'hold' ? (
+            <Hand size={10} color="white" />
+          ) : mode === 'turbo' ? (
+            <Zap size={10} color="white" />
+          ) : null}
+        </span>
+      )}
+      {/* Button label */}
       <span className="drop-shadow-md">{label}</span>
     </button>
   );

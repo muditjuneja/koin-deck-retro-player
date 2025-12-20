@@ -7,10 +7,12 @@ interface UseEmulatorInputProps {
 
 interface UseEmulatorInputReturn {
     pressKey: (key: string) => void;
+    pressDown: (button: string) => void;
+    pressUp: (button: string) => void;
 }
 
 export function useEmulatorInput({ nostalgistRef }: UseEmulatorInputProps): UseEmulatorInputReturn {
-    // Press key programmatically
+    // Press key programmatically (press and release)
     const pressKey = useCallback((key: string) => {
         if (!nostalgistRef.current) return;
 
@@ -21,7 +23,32 @@ export function useEmulatorInput({ nostalgistRef }: UseEmulatorInputProps): UseE
         }
     }, [nostalgistRef]);
 
+    // Press and hold a button
+    const pressDown = useCallback((button: string) => {
+        if (!nostalgistRef.current) return;
+
+        try {
+            (nostalgistRef.current as any).pressDown(button);
+        } catch (err) {
+            console.error('[Nostalgist] Press down error:', err);
+        }
+    }, [nostalgistRef]);
+
+    // Release a button
+    const pressUp = useCallback((button: string) => {
+        if (!nostalgistRef.current) return;
+
+        try {
+            (nostalgistRef.current as any).pressUp(button);
+        } catch (err) {
+            console.error('[Nostalgist] Press up error:', err);
+        }
+    }, [nostalgistRef]);
+
     return {
-        pressKey
+        pressKey,
+        pressDown,
+        pressUp,
     };
 }
+

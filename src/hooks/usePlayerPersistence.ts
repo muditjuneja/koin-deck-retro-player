@@ -11,6 +11,7 @@ export interface PlayerSettings {
     shader: ShaderPresetId;
     showPerformanceOverlay: boolean;
     showInputDisplay: boolean;
+    hapticsEnabled: boolean;
 }
 
 const DEFAULT_SETTINGS: PlayerSettings = {
@@ -19,6 +20,7 @@ const DEFAULT_SETTINGS: PlayerSettings = {
     shader: '',
     showPerformanceOverlay: false,
     showInputDisplay: false,
+    hapticsEnabled: true,
 };
 
 /**

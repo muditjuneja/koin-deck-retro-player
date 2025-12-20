@@ -30,15 +30,7 @@ const SYSTEMS = [
     { id: 'dos', name: 'MS-DOS', shortName: 'DOS', color: '#607D8B', core: 'dosbox_pure' },
 ];
 
-const MOCK_CHEATS: Record<string, Cheat[]> = {
-    nes: [
-        { id: 1, code: '0000-0000', description: 'Infinite Lives (Mock)' },
-        { id: 2, code: '0000-0001', description: 'Invincibility (Mock)' },
-    ],
-    snes: [
-        { id: 1, code: '7E000000', description: 'Max Gold (Mock)' },
-    ],
-};
+
 
 const SAMPLE_ROMS: Record<string, string> = {
     nes: '/flappybird.nes', // Local file to avoid CORS
@@ -209,7 +201,7 @@ export default function GameDashboard() {
                             onDeleteSaveState={handleDeleteSlot}
                             onRALogin={handleRALogin}
                             onRALogout={() => setRaUser(null)}
-                            cheats={MOCK_CHEATS[selectedSystem.id] || []}
+                            cheats={[]}
                             autoSaveInterval={30000}
                             shader={selectedShader || undefined}
                             onShaderChange={(shader, requiresRestart) => {
