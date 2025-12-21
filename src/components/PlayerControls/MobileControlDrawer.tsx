@@ -42,7 +42,7 @@ const MobileControlDrawer = memo(function MobileControlDrawer({
     return (
         <>
             {/* FAB (Floating Action Button) */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] sm:hidden player-controls-fab">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] player-controls-fab">
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
                     className={`
@@ -83,7 +83,7 @@ const MobileControlDrawer = memo(function MobileControlDrawer({
             {/* Slide-up Drawer */}
             <div
                 className={`
-          fixed inset-x-0 bottom-0 z-50 sm:hidden
+          fixed inset-x-0 bottom-0 z-50
           transform transition-all duration-300 ease-out
           player-controls-drawer
           ${isExpanded

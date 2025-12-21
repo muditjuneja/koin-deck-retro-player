@@ -489,6 +489,7 @@ const GamePlayerInner = memo(function GamePlayerInner(
                             isRecording={isRecording}
                             currentShader={effectiveShader as import('../lib/shader-presets').ShaderPresetId}
                             onShaderChange={handleShaderChange} // Wrapped
+                            isMobile={isMobile}
                         />
                     </div>
                 )}

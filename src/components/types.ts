@@ -140,6 +140,8 @@ export interface PlayerControlsProps {
     // Shader controls
     currentShader?: ShaderPresetId;
     onShaderChange?: (shader: ShaderPresetId, requiresRestart: boolean) => void;
+    // Layout override
+    isMobile?: boolean;
 }
 
 export interface SaveSlotModalProps {

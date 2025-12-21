@@ -1,6 +1,7 @@
 'use client';
 
 import { Hand, Zap, X, Move } from 'lucide-react';
+import { memo } from 'react';
 
 type Mode = 'hold' | 'turbo' | 'layout' | null;
 
@@ -50,7 +51,7 @@ const MODE_CONFIG = {
  * Unified overlay for Hold Mode and Turbo Mode
  * Shows instructions and list of configured buttons
  */
-export default function ModeOverlay({
+const ModeOverlay = memo(function ModeOverlay({
     mode,
     heldButtons,
     turboButtons,
@@ -150,5 +151,6 @@ export default function ModeOverlay({
             </div>
         </div>
     );
-}
+});
 
+export default ModeOverlay;

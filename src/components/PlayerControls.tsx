@@ -52,6 +52,7 @@ const PlayerControls = memo(function PlayerControls({
     isRecording = false,
     currentShader,
     onShaderChange,
+    isMobile = false, // Default to false if not provided
 }: PlayerControlsProps & { loadDisabled?: boolean; saveDisabled?: boolean }) {
 
     // Shared controls content
@@ -77,7 +78,8 @@ const PlayerControls = memo(function PlayerControls({
                 hardcoreRestrictions={hardcoreRestrictions}
             />
 
-            <div className="w-full h-px bg-white/10 sm:hidden my-4" />
+            {/* Divider visible only within the drawer (when not in desktop bar) */}
+            <div className={`w-full h-px bg-white/10 my-4 ${isMobile ? '' : 'sm:hidden'}`} />
 
             <SaveLoadControls
                 onSave={onSave}
@@ -97,7 +99,8 @@ const PlayerControls = memo(function PlayerControls({
                 onAutoSaveToggle={onAutoSaveToggle}
             />
 
-            <div className="w-full h-px bg-white/10 sm:hidden my-4" />
+            {/* Divider visible only within the drawer */}
+            <div className={`w-full h-px bg-white/10 my-4 ${isMobile ? '' : 'sm:hidden'}`} />
 
             <SettingsControls
                 onFullscreen={onFullscreen}
@@ -119,23 +122,43 @@ const PlayerControls = memo(function PlayerControls({
                 raGameFound={raGameFound}
                 raAchievementCount={raAchievementCount}
                 raIsIdentifying={raIsIdentifying}
+                isMobile={isMobile}
             />
         </>
     );
 
+    // Determines if we should show the desktop bar layout
+    // Show only if NOT mobile AND screen is large enough (sm)
+    const showDesktopBar = !isMobile;
+
+    // Determines if we should show the mobile drawer layout
+    // Show if IS mobile OR screen is small (default behavior)
+    // Note: MobileControlDrawer itself has sm:hidden but we can wrap it or ensure it shows.
+    // However, MobileControlDrawer has built-in 'sm:hidden' className.
+    // If isMobile is true, we want to show it regardless of screen width.
+    // We can't easily strip the class inside without modifying the component or wrapping it.
+    // Let's modify the return structure to control display here.
+
     return (
         <>
             {/* Mobile: FAB + Drawer */}
-            <MobileControlDrawer systemColor={systemColor}>
-                {controlsContent}
-            </MobileControlDrawer>
-
-            {/* Desktop: Static bar with safe centering and auto-scroll */}
-            <div className="hidden sm:flex w-full bg-black/90 backdrop-blur-md border-t border-white/10 shrink-0 z-50 overflow-x-auto no-scrollbar">
-                <div className="flex items-center min-w-max mx-auto gap-4 px-8 py-4">
+            {/* If isMobile is strictly true, we enforce display even on larger screens (landscape mobile) */}
+            {/* Or if screen is small (standard responsive behavior) */}
+            <div className={showDesktopBar ? 'sm:hidden' : 'block'}>
+                <MobileControlDrawer systemColor={systemColor}>
                     {controlsContent}
-                </div>
+                </MobileControlDrawer>
             </div>
+
+            {/* Desktop: Static bar */}
+            {/* Only visible if NOT mobile mode */}
+            {showDesktopBar && (
+                <div className="hidden sm:flex w-full bg-black/90 backdrop-blur-md border-t border-white/10 shrink-0 z-50 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center min-w-max mx-auto gap-4 px-8 py-4">
+                        {controlsContent}
+                    </div>
+                </div>
+            )}
         </>
     );
 });

@@ -7,7 +7,7 @@ import VirtualButton from './VirtualButton';
 import Dpad from './Dpad';
 import { ControlMapping } from '../../lib/controls/types';
 import { adjustButtonPosition, PositioningContext } from './positioning';
-import { useButtonPositions } from './useButtonPositions';
+import { useOrientationBehavior } from './useOrientationBehavior';
 import { getKeyboardCode } from './utils/keyboardEvents';
 import {
   isFullscreen,
@@ -20,8 +20,9 @@ import LayoutButton from './LayoutButton';
 import HoldButton from './HoldButton';
 import TurboButton from './TurboButton';
 import ModeOverlay from './ModeOverlay';
-
-const LOCK_KEY = 'koin-controls-locked';
+import OrientationOverlay from './OrientationOverlay';
+import { useControllerModes } from './hooks/useControllerModes';
+import { useControllerLayout } from './hooks/useControllerLayout';
 
 export interface VirtualControllerProps {
   system: string;
@@ -57,70 +58,39 @@ export default function VirtualController({
   const { isMobile, isLandscape, isPortrait } = useMobile();
   const [pressedButtons, setPressedButtons] = useState<Set<string>>(new Set());
   const pressedButtonsRef = useRef<Set<string>>(new Set()); // Ref for turbo effect to avoid stale closure
-  const [heldButtons, setHeldButtons] = useState<Set<string>>(new Set());
-  const [isHoldMode, setIsHoldMode] = useState(false);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isFullscreenState, setIsFullscreenState] = useState(false);
-  const [isLocked, setIsLocked] = useState(true); // Default locked
-  const { getPosition, savePosition } = useButtonPositions();
 
-  // Load lock state from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(LOCK_KEY);
-    if (stored !== null) {
-      setIsLocked(stored === 'true');
-    }
-  }, []);
+  // Layout Management Hook
+  const { isLocked, toggleLock, getPosition, savePosition } = useControllerLayout({
+    onPause,
+    onResume
+  });
 
-  // Toggle lock and persist - pause game on exit (entering layout mode), resume on lock
-  const toggleLock = useCallback(() => {
-    setIsLocked(prev => {
-      const newValue = !prev;
-      localStorage.setItem(LOCK_KEY, String(newValue));
+  // Mode Management Hook (Hold, Turbo)
+  const {
+    isHoldMode,
+    heldButtons,
+    toggleHoldMode,
+    isTurboMode,
+    turboButtons,
+    toggleTurboMode,
+    handleModePress,
+    shouldBlockRelease
+  } = useControllerModes({
+    isRunning,
+    hapticsEnabled,
+    onPause,
+    onResume,
+    onButtonUp,
+    onButtonDown
+  });
 
-      if (newValue) {
-        // Locking layout - resume game
-        onResume();
-      } else {
-        // Unlocking layout (entering layout mode) - pause game
-        onPause();
-      }
-
-      return newValue;
-    });
-  }, [onPause, onResume]);
-
-  // Toggle Hold Mode - pause game on enter, resume on exit
-  const toggleHoldMode = useCallback(() => {
-    setIsHoldMode(prev => {
-      if (prev) {
-        // Exiting hold mode - buttons stay held!
-        onResume();
-      } else {
-        // Entering hold mode - pause game
-        onPause();
-      }
-      return !prev;
-    });
-  }, [onPause, onResume]);
-
-  // Turbo Mode state
-  const [isTurboMode, setIsTurboMode] = useState(false);
-  const [turboButtons, setTurboButtons] = useState<Set<string>>(new Set());
-
-  // Toggle Turbo Mode - pause game on enter, resume on exit
-  const toggleTurboMode = useCallback(() => {
-    setIsTurboMode(prev => {
-      if (prev) {
-        // Exiting turbo mode - buttons stay configured!
-        onResume();
-      } else {
-        // Entering turbo mode - pause game
-        onPause();
-      }
-      return !prev;
-    });
-  }, [onPause, onResume]);
+  const { isDismissed, dismissOverlay } = useOrientationBehavior({
+    isPortrait,
+    isRunning,
+    onPause
+  });
 
   // Get layout for current system
   const layout = getLayoutForSystem(system);
@@ -258,69 +228,9 @@ export default function VirtualController({
       const keyboardCode = getButtonKeyboardCode(buttonType);
       if (!keyboardCode) return;
 
-      // HOLD MODE LOGIC
-      if (isHoldMode) {
-        const isHeld = heldButtons.has(buttonType);
-        if (isHeld) {
-          // Un-hold
-          setHeldButtons(prev => {
-            const next = new Set(prev);
-            next.delete(buttonType);
-            return next;
-          });
-          onButtonUp(buttonType);
-          // Haptic feedback for unhold
-          if (hapticsEnabled && navigator.vibrate) navigator.vibrate(10);
-        } else {
-          // Hold
-          setHeldButtons(prev => {
-            // Mutual exclusion: Remove from Turbo if present
-            setTurboButtons(turboPrev => {
-              if (turboPrev.has(buttonType)) {
-                const nextTurbo = new Set(turboPrev);
-                nextTurbo.delete(buttonType);
-                return nextTurbo;
-              }
-              return turboPrev;
-            });
-            return new Set(prev).add(buttonType);
-          });
-          onButtonDown(buttonType);
-          // Haptic feedback for hold
-          if (hapticsEnabled && navigator.vibrate) navigator.vibrate([10, 30, 10]);
-        }
-        return; // Skip normal press logic
-      }
-
-      // TURBO MODE LOGIC - toggle turbo status
-      if (isTurboMode) {
-        const isTurbo = turboButtons.has(buttonType);
-        if (isTurbo) {
-          // Disable Turbo
-          setTurboButtons(prev => {
-            const next = new Set(prev);
-            next.delete(buttonType);
-            return next;
-          });
-          if (hapticsEnabled && navigator.vibrate) navigator.vibrate(10);
-        } else {
-          // Enable Turbo
-          setTurboButtons(prev => {
-            // Mutual exclusion: Remove from Hold if present
-            setHeldButtons(holdPrev => {
-              if (holdPrev.has(buttonType)) {
-                const nextHold = new Set(holdPrev);
-                nextHold.delete(buttonType);
-                // Also physical release
-                onButtonUp(buttonType);
-                return nextHold;
-              }
-              return holdPrev;
-            });
-            return new Set(prev).add(buttonType);
-          });
-          if (hapticsEnabled && navigator.vibrate) navigator.vibrate([5, 10, 5]);
-        }
+      // Try to handle with special modes first (Hold/Turbo)
+      // returns true if the event was intercepted/handled by a mode
+      if (handleModePress(buttonType)) {
         return;
       }
 
@@ -337,7 +247,7 @@ export default function VirtualController({
         onButtonDown(buttonType);
       }
     },
-    [isRunning, getButtonKeyboardCode, isHoldMode, isTurboMode, heldButtons, hapticsEnabled, onButtonDown, onButtonUp]
+    [isRunning, getButtonKeyboardCode, handleModePress, heldButtons, onButtonDown]
   );
 
   const handleRelease = useCallback(
@@ -349,26 +259,10 @@ export default function VirtualController({
       const keyboardCode = getButtonKeyboardCode(buttonType);
       if (!keyboardCode) return;
 
-      // HOLD MODE LOGIC: Do nothing on release if in Hold Mode
-      if (isHoldMode) return;
-
-      // If button is physically held (via Hold Mode)
-      if (heldButtons.has(buttonType)) {
-        // If we are NOT in config mode, this release event (from a tap) should un-hold it
-        if (!isHoldMode) {
-          setHeldButtons(prev => {
-            const next = new Set(prev);
-            next.delete(buttonType);
-            return next;
-          });
-          onButtonUp(buttonType);
-          if (hapticsEnabled && navigator.vibrate) navigator.vibrate(10);
-        }
+      // Check if release event should be blocked (e.g. by specialized modes)
+      if (shouldBlockRelease(buttonType)) {
         return;
       }
-
-      // TURBO MODE LOGIC: Do nothing on release if in Config Mode
-      if (isTurboMode) return;
 
       // Optimization: Only update state if actually pressed
       setPressedButtons((prev) => {
@@ -380,7 +274,7 @@ export default function VirtualController({
 
       onButtonUp(buttonType);
     },
-    [getButtonKeyboardCode, isHoldMode, isTurboMode, heldButtons, hapticsEnabled, onButtonUp]
+    [getButtonKeyboardCode, shouldBlockRelease, onButtonUp]
   );
 
   // Release all buttons when game stops (only non-system buttons)
@@ -450,12 +344,39 @@ export default function VirtualController({
     return null;
   }
 
+  // PORTRAIT MODE: Show orientation warning overlay instead of controls
+  if (isPortrait) {
+    if (isDismissed) {
+      return null;
+    }
+    return <OrientationOverlay systemColor={systemColor} onDismiss={dismissOverlay} />;
+  }
+
   // Responsive sizing for D-pad
   const dpadSize = containerSize.width > containerSize.height ? 160 : 180;
   const dpadY = containerSize.width > containerSize.height ? 55 : 62;
 
   // For Neo Geo, D-pad might need to be slightly higher to avoid overlap if 4 buttons are curved
   const finalDpadY = system.toUpperCase() === 'NEOGEO' ? dpadY - 5 : dpadY;
+
+
+  // Create stable position change handlers to preserve React.memo on buttons
+  // This prevents all buttons from re-rendering when one button is pressed (which updates pressedButtons state)
+  const positionHandlerMap = useMemo(() => {
+    if (isLocked) return {};
+
+    const handlers: Record<string, (x: number, y: number) => void> = {};
+
+    // Handler for D-pad
+    handlers['up'] = (x, y) => savePosition('up', x, y, isLandscape); // 'up' key is used for D-pad root
+
+    // Handlers for other buttons
+    visibleButtons.forEach(btn => {
+      handlers[btn.type] = (x, y) => savePosition(btn.type, x, y, isLandscape);
+    });
+
+    return handlers;
+  }, [isLocked, visibleButtons, savePosition, isLandscape]);
 
   return (
     <div
@@ -490,7 +411,7 @@ export default function VirtualController({
         systemColor={systemColor}
         isLandscape={isLandscape}
         customPosition={getPosition('up', isLandscape)} // 'up' acts as dpad position key
-        onPositionChange={isLocked ? undefined : (x, y) => savePosition('up', x, y, isLandscape)}
+        onPositionChange={isLocked ? undefined : positionHandlerMap['up']}
         hapticsEnabled={hapticsEnabled}
         onButtonDown={onButtonDown}
         onButtonUp={onButtonUp}
@@ -510,7 +431,7 @@ export default function VirtualController({
             containerWidth={width}
             containerHeight={height}
             customPosition={customPosition}
-            onPositionChange={isLocked ? undefined : (x, y) => savePosition(buttonConfig.type, x, y, isLandscape)}
+            onPositionChange={isLocked ? undefined : positionHandlerMap[buttonConfig.type]}
             isLandscape={isLandscape}
             console={layout.console}
             hapticsEnabled={hapticsEnabled}
@@ -535,3 +456,4 @@ export default function VirtualController({
     </div>
   );
 }
+

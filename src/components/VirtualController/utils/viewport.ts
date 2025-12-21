@@ -167,17 +167,12 @@ export function createOrientationChangeHandler(
   checkReady?: () => boolean,
   maxRafs: number = 3
 ): () => void {
-  let lastOrientation: 'portrait' | 'landscape' | null = null;
-
   return () => {
-    const currentOrientation = getCurrentOrientation();
-
-    // Only process if orientation actually changed (iOS can fire multiple times)
-    if (lastOrientation === currentOrientation) {
-      return;
-    }
-
-    lastOrientation = currentOrientation;
+    // REMOVED: Don't check getCurrentOrientation() immediately here.
+    // On iOS/Android, window dimensions might not have updated yet when the event fires.
+    // If we compare current (stale) vs last (stale), they might be equal, causing us to return early
+    // and miss the actual update that happens ms later.
+    // Instead, we ALWAYS proceed to the RAF loop to wait for the layout to settle/change.
 
     // iOS Safari: orientationchange fires before layout is updated
     // Use multiple RAFs to wait for layout, with a fallback timeout

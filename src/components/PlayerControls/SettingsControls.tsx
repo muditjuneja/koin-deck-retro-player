@@ -51,7 +51,8 @@ export const SettingsControls = memo(function SettingsControls({
     raGameFound = false,
     raAchievementCount = 0,
     raIsIdentifying = false,
-}: SettingsControlsProps) {
+    isMobile = false,
+}: SettingsControlsProps & { isMobile?: boolean }) {
     const t = useKoinTranslation();
 
     // Build gamepad indicator text - simple replacement
@@ -74,15 +75,20 @@ export const SettingsControls = memo(function SettingsControls({
                 disabled={disabled}
             />
 
-            {/* Help / Shortcuts button */}
-            {onShowShortcuts && (
+            {/* Help / Shortcuts button - Hide on mobile */}
+            {!isMobile && onShowShortcuts && (
                 <ControlButton onClick={onShowShortcuts} icon={HelpCircle} label={t.controls.help} disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
             )}
 
             {/* Fullscreen button - hidden on mobile (we have floating button) */}
-            <ControlButton onClick={onFullscreen} icon={Maximize} label={t.controls.full} disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
-            {/* Hide some buttons on mobile to save space */}
-            <ControlButton onClick={onControls} icon={Gamepad2} label={t.controls.keys} disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
+            {!isMobile && (
+                <ControlButton onClick={onFullscreen} icon={Maximize} label={t.controls.full} disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
+            )}
+
+            {/* Controls/Keys button - Hide on mobile */}
+            {!isMobile && (
+                <ControlButton onClick={onControls} icon={Gamepad2} label={t.controls.keys} disabled={disabled} className="hidden sm:flex" systemColor={systemColor} />
+            )}
 
             {/* Gamepad indicator - shows connected controllers OR hint to press button */}
             {gamepadCount > 0 ? (
