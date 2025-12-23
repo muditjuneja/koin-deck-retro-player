@@ -279,7 +279,7 @@ export const SYSTEMS: SystemConfig[] = [
         extensions: ['.ngc'],
         core: 'mednafen_ngp',
         dbNames: ['SNK Neo Geo Pocket Color'],
-        iconName: 'NEOGEO_POCKET',
+        iconName: 'NEOGEO_POCKET_COLOR',
         color: 'group-hover:text-[#AD1457]',
         accentHex: '#AD1457', // NGPC Pink
         aliases: ['NEO GEO POCKET COLOR', 'NGPC'],
@@ -368,7 +368,7 @@ export const SYSTEMS: SystemConfig[] = [
         extensions: ['.wsc'],
         core: 'mednafen_wswan',
         dbNames: ['Bandai WonderSwan Color'],
-        iconName: 'WONDERSWAN',
+        iconName: 'WONDERSWAN_COLOR',
         color: 'group-hover:text-[#009688]',
         accentHex: '#009688', // WSC Teal
         aliases: ['WONDERSWAN COLOR', 'WONDER SWAN COLOR', 'BANDAI WONDERSWAN COLOR', 'WSC'],
